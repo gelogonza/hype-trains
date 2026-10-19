@@ -23,13 +23,23 @@ mkdirSync(out, { recursive: true })
 
 const built = []
 const failed = []
+const skipped = []
 
 for (const dir of readdirSync(join(root, 'apps')).sort()) {
   const pkgPath = join(root, 'apps', dir, 'package.json')
   if (!existsSync(pkgPath)) continue
   if (only.length && !only.includes(dir)) continue
   const pkg = JSON.parse(readFileSync(pkgPath, 'utf8'))
-  if (!pkg.scripts?.build) continue
+  // Hosted elsewhere (import-app --link): just link to it from the hub.
+  if (pkg.hype?.external) {
+    built.push({ dir, name: pkg.name, description: pkg.description ?? '', href: pkg.hype.external })
+    continue
+  }
+  // Opted out (e.g. a Python app or one that needs its own server).
+  if (pkg.hype?.site === false || !pkg.scripts?.build) {
+    skipped.push(pkg.name)
+    continue
+  }
 
   console.log(`\n▶ Building ${pkg.name} → ${siteBase}${dir}/`)
   const r = spawnSync('npm', ['run', 'build', '-w', pkg.name], {
@@ -79,7 +89,7 @@ writeFileSync(
   <h1>Hype Train Dreams</h1>
   <p>I441 Project 2 · one prototype per teammate</p>
   <ul>
-${built.map((a) => `    <li><a href="${siteBase}${a.dir}/"><b>${esc(a.name)}</b><small>${esc(a.description)}</small></a></li>`).join('\n')}
+${built.map((a) => `    <li><a href="${a.href ?? `${siteBase}${a.dir}/`}"${a.href ? ' target="_blank" rel="noopener"' : ''}><b>${esc(a.name)}${a.href ? ' ↗' : ''}</b><small>${esc(a.description)}</small></a></li>`).join('\n')}
   </ul>
 </main>
 </body>
@@ -87,5 +97,5 @@ ${built.map((a) => `    <li><a href="${siteBase}${a.dir}/"><b>${esc(a.name)}</b>
 `,
 )
 
-console.log(`\n✓ site/ ready with ${built.length} app(s)${failed.length ? ` — failed: ${failed.join(', ')}` : ''}`)
+console.log(`\n✓ site/ ready with ${built.length} app(s)${skipped.length ? ` · skipped (site: false / no build): ${skipped.join(', ')}` : ''}${failed.length ? ` · FAILED: ${failed.join(', ')}` : ''}`)
 if (failed.length) process.exit(1)

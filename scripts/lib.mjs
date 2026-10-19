@@ -42,3 +42,65 @@ export function buildOutput(dir) {
   const candidates = [pkg.hype?.out, 'dist', 'build', 'out'].filter(Boolean)
   return candidates.map((c) => join(appsDir, dir, c)).find((p) => existsSync(p))
 }
+
+/** Folders never worth scanning or copying. */
+export const IGNORE_DIRS = new Set(['node_modules', '.git', 'dist', 'build', 'out', '.next', '.svelte-kit', '.astro', '.vercel', '.turbo', '.cache', '.parcel-cache', '.expo', 'coverage'])
+
+/** Walk text-ish source files under `dir` (skips deps and build output). Calls fn(path, text). */
+export function walkSource(dir, fn, exts = /\.(html|css|scss|js|jsx|ts|tsx|mjs|vue|svelte|astro)$/) {
+  const stack = [dir]
+  while (stack.length) {
+    const d = stack.pop()
+    let entries
+    try {
+      entries = readdirSync(d, { withFileTypes: true })
+    } catch {
+      continue
+    }
+    for (const e of entries) {
+      if (e.isDirectory()) {
+        if (!IGNORE_DIRS.has(e.name)) stack.push(join(d, e.name))
+      } else if (exts.test(e.name)) {
+        try {
+          fn(join(d, e.name), readFileSync(join(d, e.name), 'utf8'))
+        } catch {
+          /* unreadable file */
+        }
+      }
+    }
+  }
+}
+
+/**
+ * Asset URLs hard-coded from the domain root ("/img/logo.png"). They work on localhost but break
+ * once the app is hosted under /<app-name>/. Returns up to `limit` "file:line  snippet" hits.
+ */
+export function findRootPaths(dir, limit = 8) {
+  // Vite rewrites root paths in index.html and CSS to include the base; only JS/TS string literals break.
+  const vite = ['vite.config.ts', 'vite.config.js', 'vite.config.mts', 'vite.config.mjs'].some((f) => existsSync(join(dir, f)))
+  const hits = []
+  const attr = /(?:src|href|poster)=["']\/(?!\/)[^"'#?]+\.(?:png|jpe?g|gif|svg|webp|avif|mp3|wav|ogg|mp4|webm|glb|gltf|json|css|js|woff2?)["']/g
+  const lit = /["'`]\/(?!\/)[\w\-./]+\.(?:png|jpe?g|gif|svg|webp|avif|mp3|wav|ogg|mp4|webm|glb|gltf|json|woff2?)["'`]/g
+  const css = /url\(\s*["']?\/(?!\/)[^)"']+["']?\s*\)/g
+  walkSource(dir, (file, text) => {
+    if (hits.length >= limit) return
+    text.split('\n').forEach((line, i) => {
+      if (hits.length >= limit) return
+      const code = /\.(js|jsx|ts|tsx|mjs|vue|svelte)$/.test(file)
+      const m = code ? line.match(lit) || (!vite && line.match(attr)) : !vite && (line.match(attr) || line.match(css))
+      if (m) hits.push(`${file.slice(dir.length + 1)}:${i + 1}  ${m[0]}`)
+    })
+  })
+  return hits
+}
+
+/** localStorage/sessionStorage keys that aren't prefixed with "<app>:" (they'd clash on a shared domain). */
+export function findUnprefixedStorage(dir, app, limit = 6) {
+  const hits = new Set()
+  walkSource(dir, (file, text) => {
+    for (const m of text.matchAll(/(?:local|session)Storage\.(?:setItem|getItem|removeItem)\(\s*["'`]([^"'`]+)["'`]/g)) {
+      if (!m[1].startsWith(`${app}:`) && hits.size < limit) hits.add(`${m[1]}  (${file.slice(dir.length + 1)})`)
+    }
+  })
+  return [...hits]
+}

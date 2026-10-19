@@ -9,9 +9,12 @@ hype-train-dreams/
     <your-app>/         one folder per teammate concept
   packages/             shared code, only once two apps need the same thing (empty for now)
   templates/app/        starter used by `npm run new-app`
-  scripts/              new-app.mjs, import-app.mjs, build-site.mjs
+  scripts/              new-app, import-app, doctor, build-site (+ lib.mjs helpers)
   package.json          npm workspaces root, with the only lockfile
+  AGENTS.md             instructions for AI coding agents (CLAUDE.md loads it)
 ```
+
+> **Using an AI agent?** Point it at `AGENTS.md`. It tells the agent to read this README and the scripts first, then import or create apps without breaking anyone else's build.
 
 ## Setup
 
@@ -30,7 +33,9 @@ npm install          # always at the repo root, never inside an app
 | Build every app | `npm run build` |
 | Add a dependency to your app | `npm install <pkg> -w @hype/<app>` |
 | Start a new app | `npm run new-app -- <name> --title "Concept" --owner "You"` then `npm install` |
-| Bring in a project you already built | `npm run import-app -- <path> <name> --owner "You"` then `npm install` |
+| Bring in a project you already built | `npm run import-app -- <folder \| .zip \| git-url> <name> --owner "You"` then `npm install` |
+| List something hosted elsewhere | `npm run import-app -- --link <url> <name> --owner "You"` |
+| Check apps follow the rules | `npm run doctor` (or `npm run doctor -- <app>`) |
 | Build the combined site | `npm run build:site` → `site/` (add `SITE_BASE=/repo-name/` for GitHub Pages) |
 | Preview the combined site | `npm run preview:site` |
 
@@ -51,19 +56,24 @@ It's a plain Vite + React + TypeScript app. You can restyle it, swap libraries, 
 
 ## Bringing in a project you already built
 
-You don't need to start over. Import your existing project as its own app:
+You don't need to start over. Import your existing project as its own app. The source can be a **folder**, a **.zip** (e.g. downloaded from Canvas, Drive, Bolt or Lovable) or a **git URL**:
 
 ```bash
 npm run import-app -- ~/path/to/my-project boss-fight-train --owner "Sam"
+npm run import-app -- ~/Downloads/my-project.zip boss-fight-train --owner "Sam"
+npm run import-app -- https://github.iu.edu/sam/boss-fight.git boss-fight-train --owner "Sam"
+
 npm install
 npm run dev -w @hype/boss-fight-train
 npm run build -w @hype/boss-fight-train
+npm run doctor -- boss-fight-train
 ```
 
 The importer:
-1. **Copies** your project into `apps/boss-fight-train`. Your original folder is untouched. It leaves out `node_modules`, `dist`/`build`/`out`/`.next`, your old `.git`, and your lockfile, because this repo has one shared lockfile.
-2. **Renames** the package to `@hype/boss-fight-train` and gives it the next free dev port.
-3. **Sets it up for its stack** so it builds on its own and works under `/boss-fight-train/` on the combined site:
+1. **Finds the actual app.** If it's nested (`my-project/frontend/`, `client/`, their own monorepo), it picks the web front end, or asks you to choose with `--subdir <path>`. It also tells you which parts it left behind, such as a `server/` folder.
+2. **Copies** the app into `apps/boss-fight-train`. Your original folder is untouched. It leaves out `node_modules`, build output (`dist`/`build`/`out`/`.next`…), the old `.git`, the lockfile (this repo has one shared lockfile) and **secret `.env` files**. `.env.example` is kept.
+3. **Renames** the package to `@hype/boss-fight-train`, gives it the next free dev port, and removes a pinned `packageManager` (yarn/pnpm) that would fight npm.
+4. **Sets it up for its stack** so it builds on its own and works under `/boss-fight-train/` on the combined site:
 
 | Your project | What the importer does | Anything left for you |
 | --- | --- | --- |
@@ -71,7 +81,15 @@ The importer:
 | **Plain HTML / CSS / JS** | Adds a tiny Vite setup to serve and build it; your files stay as they are | Use relative paths (`./style.css`, not `/style.css`) |
 | **Next.js** | Pins the dev port; build output is `out/` | Add `output: 'export'` and `basePath` to `next.config` (it prints the exact lines) |
 | **Create React App** | Pins the port, sets `"homepage": "."`; build output is `build/` | Use `HashRouter` if you use React Router |
+| **Vue / Svelte / Solid on Vite** | Same as Vite | — |
+| **Astro / SvelteKit** | Pins the port and output folder | Set `base` (Astro) or `adapter-static` + `paths.base` (SvelteKit); it prints how |
+| **Angular** | Pins the port, builds with `--base-href ./` | Check the output folder (`hype.out`) |
+| **Parcel / Webpack** | Pins the port and relative public path | Webpack: `output.publicPath` (it prints how) |
+| **Expo / React Native** | Uses the web export | Phone-only features need Expo Go to demo |
+| **Has a backend** (Express, Prisma, Mongo…) | Imports the front end and flags the server | Run the server separately for demos, mock the API, or set `"site": false` |
+| **Python** (Streamlit, Flask, Jupyter) | Keeps it for code review, off the static site | Host it, then add a link with `--link` |
 | **Something else** | Copies it and gives it a port | Follow the checklist it prints |
+5. **Scans for things that break later,** like asset paths hard-coded to the domain root (`"/img/logo.png"`). It prints them with file and line numbers.
 
 **Different library versions are fine.** If your project uses another React or Vite version, npm keeps a separate copy just for your app. If `npm install` complains about peer dependencies, try `npm install --legacy-peer-deps` and tell the group.
 
@@ -86,6 +104,33 @@ npm install
 ```
 
 `--in-place` makes the same fixes without copying, and removes the subtree's own `node_modules` and lockfile.
+
+### It's hosted somewhere else, or isn't code at all
+
+For a Figma prototype, a deployed Vercel/Netlify site, Streamlit Cloud or Replit, add it as a **link**. It shows up on the combined site's hub page with ↗ and nothing gets built:
+
+```bash
+npm run import-app -- --link https://www.figma.com/proto/... boss-fight-proto --owner "Sam"
+```
+
+### Troubleshooting: "they didn't build it the way we expected"
+
+Run `npm run doctor -- <app>` first. It checks every rule below and prints a fix next to each problem.
+
+| Symptom | Cause | Fix |
+| --- | --- | --- |
+| Works on localhost, blank page or broken images on the shared site | Paths hard-coded to the domain root (`"/logo.png"`) | Use `"./logo.png"`, `import logo from './logo.png'`, or `import.meta.env.BASE_URL + 'logo.png'` |
+| Deep links 404 on the shared site | `BrowserRouter` on a static host | Use `HashRouter`, or set `basename={import.meta.env.BASE_URL}` and link from the app's home page |
+| `npm run build` fails on TypeScript errors in AI-generated code | The build runs `tsc` first | Fix the types, or temporarily change `"build"` to `vite build` and note it in the app README |
+| `npm install` fails with ERESOLVE / peer deps | Old or mismatched library versions | `npm install --legacy-peer-deps`, then tell the group; or update the library |
+| "Port already in use" | Two apps on the same port | `npm run doctor` shows which; change `hype.port` and `server.port` together |
+| App calls `localhost:3000/api` | It needs its own backend | Run the server alongside while demoing, mock the data, or set `"site": false` |
+| It needs API keys | `.env` was intentionally not copied | Share keys privately; commit `.env.example`; never commit real keys |
+| Settings leak between apps on the shared site | Same `localStorage` key names | Prefix keys with the app name (`my-app:volume`) |
+| Uses yarn/pnpm commands in its scripts | Different package manager | Replace them with `npm run …`; the root `npm install` handles everything |
+| Several things in one zip / repo | Front end + server + docs together | Re-run with `--subdir <the front end folder>` |
+
+Still stuck? Open the app in an AI agent and point it at `AGENTS.md`. It knows these rules and the scripts.
 
 ## How builds stay separate
 

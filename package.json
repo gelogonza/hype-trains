@@ -12,6 +12,7 @@
   "scripts": {
     "new-app": "node scripts/new-app.mjs",
     "import-app": "node scripts/import-app.mjs",
+    "doctor": "node scripts/doctor.mjs",
     "build": "npm run build --workspaces --if-present",
     "lint": "npm run lint --workspaces --if-present",
     "build:site": "node scripts/build-site.mjs",
