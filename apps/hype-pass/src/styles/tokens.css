@@ -1,0 +1,158 @@
+/* Twitch tokens, from the Twitch UI Starter Kit (Figma) color + type pages */
+:root {
+  /* Grey */
+  --grey-0: #f7f7f8;
+  --grey-50: #efeff1;
+  --grey-100: #dedee3;
+  --grey-300: #adadb8;
+  --grey-500: #848494;
+  --grey-700: #53535f;
+  --grey-800: #3b3b44;
+  --grey-900: #26262c;
+  --grey-1000: #1f1f23;
+  --grey-1100: #18181b;
+  --grey-1200: #0e0e10;
+
+  /* Violet (primary) */
+  --violet-50: #f2e8ff;
+  --violet-200: #cfadff;
+  --violet-300: #bf94ff;
+  --violet-400: #a970ff;
+  --violet-500: #9147ff;
+  --violet-600: #772ce8;
+  --violet-700: #5c16c5;
+  --violet-900: #2e0b68;
+
+  --red-400: #ff4f4d;
+  --red-500: #eb0400;
+  --orange-300: #ffb84d;
+  --orange-400: #ff9f1a;
+  --orange-500: #f08c00;
+  --yellow-300: #ffd37a;
+  --yellow-400: #ffca5f;
+  --green-400: #00f593;
+  --green-500: #00c274;
+  --cyan-400: #00e6cb;
+  --blue-400: #57a4ff;
+
+  /* Semantic */
+  --bg: var(--grey-1200);
+  --surface: var(--grey-1100);
+  --surface-2: var(--grey-1000);
+  --surface-3: var(--grey-900);
+  --border: #2f2f35;
+  --text: var(--grey-50);
+  --text-2: var(--grey-300);
+  --text-3: var(--grey-500);
+  --accent: var(--violet-500);
+  --accent-hover: var(--violet-600);
+  --live: var(--red-500);
+
+  /* Chrome (dark = Twitch default) */
+  --link: #bf94ff;
+  --gold-text: #ffd37a;
+  --btn: #2f2f35;
+  --btn-hover: #3e3e45;
+  --hover: rgb(255 255 255 / 0.08);
+  --panel: #1f1f23;
+  --card: #2a2a2e;
+  --card-line: #3a3a3d;
+  --tag: #323239;
+  --field-focus: #000;
+  --sidebar: #1f1f23;
+  --shadow-nav: 0 1px 2px #0009, 0 0 2px #0006;
+
+  /* Hype Pass "paper" (dark) */
+  --paper: #26232e;
+  --paper-2: #1c1a22;
+  --paper-ink: #efeff1;
+  --paper-ink-2: #a9a3b8;
+  --paper-accent: #bf94ff;
+  --paper-line: rgb(255 255 255 / 0.16);
+  --paper-chip: rgb(255 255 255 / 0.08);
+  --pass-bg: #211c2c;
+  --pass-tabs: #18151f;
+  --photo-ring: #3a3546;
+  --card-edge: #3d3650;
+  --card-edge-2: #5d547a;
+
+  /* Rims for earned stamps (by level reached) */
+  --rim-1: #b07a4a;
+  --rim-2: #a9b4c2;
+  --rim-3: #e8b83d;
+  --rim-4: #46e3d0;
+  --rim-5: #bf94ff;
+
+  --font: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --mono: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+
+  --radius-s: 6px;
+  --radius: 10px;
+  --radius-l: 18px;
+  --shadow-l: 0 24px 60px rgb(0 0 0 / 0.55), 0 4px 14px rgb(0 0 0 / 0.4);
+
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  color-scheme: dark;
+}
+
+/* Twitch "Dark Theme" off → light. Set by the user's Twitch setting (data-theme on <html>). */
+:root[data-theme='light'] {
+  --bg: #f7f7f8;
+  --surface: #ffffff;
+  --surface-2: #f2f2f4;
+  --surface-3: #e6e6ea;
+  --border: #dedee3;
+  --text: #0e0e10;
+  --text-2: #53535f;
+  --text-3: #848494;
+  --accent-hover: #772ce8;
+
+  --link: #772ce8;
+  --gold-text: #9a6200;
+  --btn: #e6e6ea;
+  --btn-hover: #dadade;
+  --hover: rgb(0 0 0 / 0.06);
+  --panel: #ffffff;
+  --card: #f2f2f4;
+  --card-line: #dedee3;
+  --tag: #e6e6ea;
+  --field-focus: #fff;
+  --sidebar: #efeff1;
+  --shadow-nav: 0 1px 2px #0002, 0 0 2px #0001;
+  --shadow-l: 0 24px 60px rgb(0 0 0 / 0.18), 0 4px 14px rgb(0 0 0 / 0.1);
+
+  --paper: #fbf6ec;
+  --paper-2: #f3ead7;
+  --paper-ink: #2b2236;
+  --paper-ink-2: #6b5f78;
+  --paper-accent: #5c16c5;
+  --paper-line: rgb(43 34 54 / 0.2);
+  --paper-chip: rgb(255 255 255 / 0.6);
+  --pass-bg: #f6f0ff;
+  --pass-tabs: #efe6ff;
+  --photo-ring: #ffffff;
+  --card-edge: #b9a6d6;
+  --card-edge-2: #e6dcf3;
+
+  color-scheme: light;
+}
+
+/* Immersive views (the 3D station) stay dark in either theme. */
+.theme-dark {
+  --bg: #0e0e10;
+  --surface: #18181b;
+  --surface-2: #1f1f23;
+  --surface-3: #26262c;
+  --border: #2f2f35;
+  --text: #efeff1;
+  --text-2: #adadb8;
+  --text-3: #848494;
+  --btn: #2f2f35;
+  --btn-hover: #3e3e45;
+  --hover: rgb(255 255 255 / 0.08);
+  --panel: #1f1f23;
+  --card: #2a2a2e;
+  --card-line: #3a3a3d;
+  color: var(--text);
+  color-scheme: dark;
+}

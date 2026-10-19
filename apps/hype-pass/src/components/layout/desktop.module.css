@@ -1,0 +1,311 @@
+/* Twitch web chrome: only shown on desktop widths. */
+
+.nav {
+  display: none;
+}
+.sidebar {
+  display: none;
+}
+
+.iconBtn {
+  width: 36px;
+  height: 36px;
+  border-radius: 6px;
+  display: grid;
+  place-items: center;
+  color: var(--text);
+}
+.iconBtn:hover {
+  background: var(--hover);
+}
+
+/* User menu + Twitch "Dark Theme" switch */
+.userMenu {
+  position: relative;
+}
+.avatarBtn {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+}
+.menu {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 8px);
+  width: 260px;
+  padding: 10px;
+  border-radius: 8px;
+  background: var(--panel);
+  color: var(--text);
+  box-shadow: var(--shadow-l);
+  border: 1px solid var(--border);
+  z-index: 30;
+}
+.menuHead {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 4px 6px 8px;
+}
+.menu hr {
+  border: 0;
+  border-top: 1px solid var(--border);
+  margin: 6px 0;
+}
+.menu a {
+  display: block;
+  padding: 6px;
+  border-radius: 4px;
+  font-size: 14px;
+  cursor: pointer;
+}
+.menu a:hover {
+  background: var(--hover);
+}
+.switchRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 6px;
+  font-size: 14px;
+}
+.switch {
+  position: relative;
+  width: 40px;
+  height: 20px;
+  border-radius: 999px;
+  border: 2px solid var(--text-3);
+  flex-shrink: 0;
+}
+.switch i {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--text-2);
+  transition: transform 0.15s;
+}
+.switchOn {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+.switchOn i {
+  background: #fff;
+  transform: translateX(20px);
+}
+
+@media (min-width: 1024px) {
+  .nav {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    height: 50px;
+    padding: 0 10px 0 14px;
+    background: var(--surface);
+    box-shadow: var(--shadow-nav);
+    position: relative;
+    z-index: 5;
+    flex-shrink: 0;
+  }
+  .navLeft,
+  .navRight {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex: 1;
+  }
+  .navRight {
+    justify-content: flex-end;
+    gap: 4px;
+  }
+  .logo {
+    color: var(--violet-500);
+    display: grid;
+    place-items: center;
+    width: 40px;
+    margin-right: 6px;
+  }
+  .navLink {
+    font-size: 17px;
+    font-weight: 600;
+    padding: 0 10px;
+    cursor: pointer;
+  }
+  .navLink:hover {
+    color: var(--link);
+  }
+  .search {
+    display: flex;
+    width: min(400px, 34vw);
+  }
+  .search input {
+    flex: 1;
+    min-width: 0;
+    background: var(--surface);
+    border: 2px solid var(--text-3);
+    border-right: 0;
+    border-radius: 6px 0 0 6px;
+    padding: 5px 10px;
+    font-size: 14px;
+    outline: none;
+  }
+  .search input:focus {
+    border-color: var(--violet-500);
+    background: var(--field-focus);
+  }
+  .search button {
+    width: 36px;
+    display: grid;
+    place-items: center;
+    background: var(--btn);
+    border-radius: 0 6px 6px 0;
+  }
+  .adFree {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin: 0 8px 0 6px;
+    padding: 6px 10px;
+    border-radius: 6px;
+    background: var(--btn);
+    font-weight: 600;
+    font-size: 13px;
+    white-space: nowrap;
+  }
+  .adFree:hover {
+    background: var(--btn-hover);
+  }
+
+  .sidebar {
+    display: flex;
+    flex-direction: column;
+    width: 60px;
+    flex-shrink: 0;
+    background: var(--sidebar);
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding-bottom: 20px;
+  }
+  .sideHead,
+  .sideSection h3,
+  .sideText,
+  .sideLive,
+  .sideOff,
+  .showMore {
+    display: none;
+  }
+  .sideSection ul {
+    list-style: none;
+    margin: 0;
+    padding: 6px 0 0;
+  }
+  .sideRow {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 5px 15px;
+    cursor: pointer;
+  }
+  .sideRow:hover {
+    background: var(--hover);
+  }
+  .sideAvatar {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    display: grid;
+    place-items: center;
+    font-size: 13px;
+    font-weight: 900;
+    color: #0e0e10;
+  }
+  .offline {
+    filter: grayscale(1);
+    opacity: 0.6;
+  }
+}
+
+@media (min-width: 1240px) {
+  .sidebar {
+    width: 240px;
+  }
+  .sideHead {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 6px 4px 10px;
+  }
+  .sideHead h2 {
+    font-size: 18px;
+    margin: 0;
+  }
+  .sideSection h3 {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin: 10px 10px 0;
+    font-size: 13px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+    color: var(--text);
+  }
+  .sideRow {
+    padding: 5px 10px;
+  }
+  .sideText {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-width: 0;
+    line-height: 1.25;
+  }
+  .sideText strong {
+    font-size: 14px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .sideText span {
+    font-size: 13px;
+    color: var(--text-2);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .sideLive,
+  .sideOff {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 13px;
+    color: var(--text);
+    align-self: flex-start;
+    margin-top: 2px;
+  }
+  .sideLive i {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--live);
+  }
+  .sideOff {
+    color: var(--text-2);
+  }
+  .showMore {
+    display: block;
+    padding: 6px 10px;
+    font-size: 13px;
+    color: var(--link);
+    cursor: pointer;
+  }
+  .showMore:hover {
+    text-decoration: underline;
+  }
+}

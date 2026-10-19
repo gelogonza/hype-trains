@@ -1,0 +1,19 @@
+{
+  "name": "hype-train-dreams",
+  "private": true,
+  "description": "I441 Project 2 — each teammate's Hype Train prototype as its own app.",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "engines": {
+    "node": ">=20.19"
+  },
+  "scripts": {
+    "new-app": "node scripts/new-app.mjs",
+    "build": "npm run build --workspaces --if-present",
+    "lint": "npm run lint --workspaces --if-present",
+    "build:site": "node scripts/build-site.mjs",
+    "preview:site": "npx --yes serve@14.2.4 site"
+  }
+}

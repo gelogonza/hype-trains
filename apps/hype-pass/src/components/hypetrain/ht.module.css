@@ -1,0 +1,507 @@
+/* Hype Train in chat — Twitch's native collapsed bar + dropdown, riding on our 3D train. */
+
+.ht {
+  --ht-fill: #5a7be6;
+  --ht-edge: #a8bdff;
+  position: relative;
+  z-index: 6;
+  flex-shrink: 0;
+  padding: 0;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+}
+.t_running,
+.t_boarding {
+  --ht-fill: #6f5ae6;
+  --ht-edge: #bfaeff;
+}
+.t_arrived {
+  --ht-fill: #c99a1e;
+  --ht-edge: #ffe08a;
+}
+.t_delayed,
+.t_idle {
+  --ht-fill: #53535f;
+  --ht-edge: #848494;
+}
+
+.scene {
+  position: relative;
+  height: 132px;
+  overflow: hidden;
+  background: #140a2b;
+}
+.scene canvas {
+  display: block;
+}
+
+/* Battle Royale skin: Battle Bus blue, storm-purple bursts, daytime sky while the 3D loads */
+.th_battle .scene {
+  background: #8fd6ff;
+}
+.th_battle.t_running,
+.th_battle.t_boarding {
+  --ht-fill: #2f7bff;
+  --ht-edge: #8fd0ff;
+}
+.th_battle .barMid em {
+  color: #8fd0ff;
+}
+.th_battle .pips i.pipNow {
+  background: #2f7bff;
+}
+.th_battle .burst {
+  background: linear-gradient(110deg, #1456d6, #2f7bff 55%, #8f3cff);
+}
+.th_battle .burstGold {
+  background: linear-gradient(110deg, #8a5a00, #e8b83d 55%, #fff2b0);
+}
+
+/* One surface: the moving train with its status HUD along the top */
+.scene {
+  cursor: pointer;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.scene:focus-visible {
+  outline: 2px solid var(--violet-300);
+  outline-offset: -2px;
+}
+.hud {
+  position: absolute;
+  inset: 0 0 auto 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px 14px 6px;
+  color: #fff;
+  background: linear-gradient(rgb(0 0 0 / 0.62), rgb(0 0 0 / 0.38) 70%, transparent);
+  pointer-events: none;
+}
+.hud .nudge {
+  color: rgb(255 255 255 / 0.85);
+}
+.hud .nudgeMe {
+  color: var(--green-400);
+}
+.hud .barMid em {
+  color: var(--yellow-300);
+}
+.isOpen .scene {
+  box-shadow: inset 0 -3px 0 var(--ht-edge);
+}
+.t_running .scene,
+.t_boarding .scene {
+  box-shadow: inset 0 -3px 0 var(--ht-edge);
+}
+.chev {
+  position: relative;
+  width: 30px;
+  height: 30px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: rgb(255 255 255 / 0.16);
+  transition: transform 0.2s;
+}
+.isOpen .chev {
+  transform: rotate(180deg);
+}
+
+/* Dropdown */
+.drop {
+  position: absolute;
+  left: 8px;
+  right: 8px;
+  top: 100%;
+  display: flex;
+  flex-direction: column;
+  background: var(--panel);
+  border: 1px solid var(--card-line);
+  border-top: 0;
+  border-radius: 0 0 10px 10px;
+  box-shadow: 0 18px 40px rgb(0 0 0 / 0.6);
+  overflow: hidden;
+}
+.dropBody {
+  overflow-y: auto;
+  padding: 14px 16px 6px;
+}
+.remaining {
+  background: var(--card);
+  border-radius: 8px;
+  padding: 12px;
+  text-align: center;
+}
+.remaining p {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  flex-wrap: wrap;
+}
+.remaining span {
+  font-size: 14px;
+  color: var(--text-2);
+}
+
+.h {
+  margin: 16px 0 8px;
+  font-size: 16px;
+  font-weight: 800;
+}
+
+.carousel {
+  position: relative;
+}
+.track {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+  padding-right: 40px;
+}
+.track::-webkit-scrollbar {
+  display: none;
+}
+.next {
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%) rotate(-90deg);
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: var(--btn);
+  box-shadow: 0 2px 8px rgb(0 0 0 / 0.3);
+}
+.next:hover {
+  background: var(--btn-hover);
+}
+
+.card {
+  flex: 0 0 132px;
+  scroll-snap-align: start;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 10px 8px;
+  border-radius: 8px;
+  background: var(--card);
+  text-align: center;
+}
+.cardArt {
+  height: 64px;
+  display: grid;
+  place-items: center;
+}
+.emote {
+  font-size: 40px;
+  line-height: 1;
+}
+.cardLabel {
+  font-size: 12px;
+  color: var(--text-2);
+  line-height: 1.25;
+  min-height: 30px;
+}
+.cardStatus {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-2);
+}
+.cardDone .cardStatus {
+  color: var(--green-400);
+}
+.cardNow {
+  outline: 1.5px solid var(--ht-edge);
+}
+.cardNow .cardStatus {
+  color: var(--text);
+}
+.card:not(.cardDone):not(.cardNow) .cardArt {
+  filter: saturate(0.4) brightness(0.85);
+}
+
+.info {
+  flex: 0 0 82%;
+  scroll-snap-align: start;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: 8px;
+  background: var(--card);
+}
+.info span {
+  font-size: 26px;
+}
+.info p {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.35;
+}
+
+.stationLink {
+  display: block;
+  margin: 14px auto 6px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--link);
+}
+.stationLink:hover {
+  text-decoration: underline;
+}
+
+.foot {
+  border-top: 1px solid var(--card-line);
+  padding: 12px 16px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  background: var(--panel);
+}
+.footRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.footText {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+.footText strong {
+  font-size: 16px;
+}
+.footText span {
+  font-size: 13px;
+  color: var(--text-2);
+}
+.cta {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 11px;
+  border-radius: 999px;
+  background: var(--accent);
+  color: #fff;
+  font-weight: 800;
+  font-size: 15px;
+}
+.cta:hover {
+  background: var(--accent-hover);
+}
+.ctaGhost {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--orange-300);
+  padding: 4px;
+}
+.ctaGhost:hover {
+  text-decoration: underline;
+}
+
+/* ---------- Stamp meter ---------- */
+.ring {
+  position: relative;
+  width: 56px;
+  height: 56px;
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+}
+.ringSvg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+.ringStamp {
+  position: relative;
+  display: block;
+}
+.barMid {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.barMid b {
+  font-size: 14px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.barMid em {
+  font-style: normal;
+  font-weight: 900;
+  margin-left: 4px;
+  color: var(--paper-accent);
+}
+.pips {
+  display: flex;
+  gap: 5px;
+}
+.pips i {
+  width: 22px;
+  height: 6px;
+  border-radius: 3px;
+  background: var(--hover);
+  box-shadow: inset 0 0 0 1px var(--card-line);
+}
+.pips i.pipOn {
+  box-shadow: 0 0 8px currentColor;
+}
+.pips i.pipNow {
+  background: var(--accent);
+  animation: pipPulse 1s ease-in-out infinite;
+}
+@keyframes pipPulse {
+  50% {
+    opacity: 0.35;
+  }
+}
+.nudge {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-2);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.nudgeMe {
+  color: var(--green-500);
+  font-weight: 800;
+}
+.barRight {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  line-height: 1.15;
+  font-variant-numeric: tabular-nums;
+}
+.barRight b {
+  font-size: 18px;
+}
+.combo {
+  margin-top: 2px;
+  font-size: 13px;
+  font-weight: 900;
+  padding: 1px 7px;
+  border-radius: 999px;
+  color: #3b1a00;
+  background: linear-gradient(90deg, var(--yellow-300), var(--orange-400));
+  box-shadow: 0 0 12px #ff9f1a88;
+}
+.pop {
+  position: absolute;
+  left: 34px;
+  top: 4px;
+  font-size: 18px;
+  font-weight: 900;
+  color: var(--green-400);
+  text-shadow: 0 2px 6px #000a;
+  pointer-events: none;
+}
+.hot {
+  animation: hot 0.9s ease-in-out infinite;
+}
+@keyframes hot {
+  50% {
+    box-shadow: inset 0 0 0 3px var(--orange-400), inset 0 0 26px #ff9f1aaa;
+  }
+}
+
+/* ---------- Level cleared burst ---------- */
+.burst {
+  position: absolute;
+  left: 8px;
+  right: 8px;
+  top: calc(100% + 6px);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  color: #fff;
+  background: linear-gradient(110deg, #5c16c5, #9147ff 60%, #ff9f1a);
+  box-shadow: 0 14px 34px rgb(0 0 0 / 0.45);
+  pointer-events: none;
+  overflow: hidden;
+  z-index: 2;
+}
+.burstGold {
+  background: linear-gradient(110deg, #8a5a00, #e8b83d 55%, #fff2b0);
+  color: #2b1a00;
+}
+.burstConfetti {
+  position: absolute;
+  inset: 0;
+}
+.burstConfetti i {
+  position: absolute;
+  top: 0;
+  width: 6px;
+  height: 10px;
+  border-radius: 2px;
+}
+.burstStamp {
+  position: relative;
+  flex-shrink: 0;
+  filter: drop-shadow(0 4px 8px #0006);
+}
+.burstText {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+.burstText small {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  opacity: 0.85;
+}
+.burstText strong {
+  font-size: 22px;
+  font-weight: 900;
+  letter-spacing: -0.01em;
+}
+.burstText span {
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.soundToggle {
+  display: block;
+  margin: 14px auto 0;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-2);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hot,
+  .pips i.pipNow {
+    animation: none;
+  }
+}
+
+@media (min-width: 1024px) {
+  .scene {
+    height: 146px;
+  }
+}

@@ -1,0 +1,133 @@
+.root {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgb(0 0 0 / 0.6);
+  backdrop-filter: blur(2px);
+}
+
+.panel {
+  position: relative;
+  width: 100%;
+  max-height: 92dvh;
+  border-radius: var(--radius-l) var(--radius-l) 0 0;
+  box-shadow: var(--shadow-l);
+  display: flex;
+  flex-direction: column;
+  outline: none;
+  padding-bottom: var(--safe-bottom);
+}
+
+.tall {
+  height: 92dvh;
+}
+
+.dark {
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+}
+
+.station {
+  background:
+    radial-gradient(120% 60% at 50% 0%, #2a1255 0%, transparent 60%),
+    linear-gradient(#141019, #0e0e10);
+  border-top: 1px solid #3b2470;
+}
+
+.rootCenter {
+  align-items: center;
+  padding: 12px;
+}
+.panel.bare {
+  width: min(400px, 100%);
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+}
+.bare .close {
+  top: 4px;
+  right: 4px;
+  color: #fff;
+  background: rgb(0 0 0 / 0.55);
+  backdrop-filter: blur(4px);
+}
+.bare .close:hover {
+  background: rgb(0 0 0 / 0.75);
+}
+.bare .body {
+  overflow-y: auto;
+  overflow-x: visible;
+}
+
+.grabber {
+  padding: 10px 0 6px;
+  display: grid;
+  place-items: center;
+  cursor: grab;
+  touch-action: none;
+  flex-shrink: 0;
+}
+.grabber span {
+  width: 40px;
+  height: 5px;
+  border-radius: 3px;
+  background: var(--grey-700);
+}
+
+.close {
+  position: absolute;
+  top: 10px;
+  right: 12px;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  color: var(--text-2);
+  background: var(--hover);
+  z-index: 2;
+  font-size: 13px;
+}
+.close:hover {
+  background: var(--btn-hover);
+  color: var(--text);
+}
+
+.body {
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  flex: 1;
+  min-height: 0;
+}
+
+@media (min-width: 768px) {
+  .root {
+    align-items: center;
+    padding: 24px;
+  }
+  .panel {
+    width: min(460px, 100%);
+    border-radius: var(--radius-l);
+    border: 1px solid var(--border);
+    max-height: min(860px, 94dvh);
+  }
+  .panel.bare {
+    width: min(420px, 100%);
+    border: 0;
+  }
+  .tall {
+    width: min(560px, 100%);
+    height: min(820px, 94dvh);
+  }
+  .body {
+    padding-top: 8px;
+  }
+}

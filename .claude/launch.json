@@ -1,0 +1,6 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    { "name": "hype-pass", "runtimeExecutable": "npm", "runtimeArgs": ["run", "dev", "-w", "@hype/hype-pass"], "port": 5101 }
+  ]
+}
