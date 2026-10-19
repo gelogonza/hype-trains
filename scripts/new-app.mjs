@@ -7,10 +7,9 @@
 // the next free dev port, so nobody's dev server or build collides with anyone else's.
 
 import { cpSync, existsSync, readdirSync, readFileSync, statSync, writeFileSync } from 'node:fs'
-import { join, dirname } from 'node:path'
-import { fileURLToPath } from 'node:url'
+import { join } from 'node:path'
+import { NAME_RE, nextPort, root } from './lib.mjs'
 
-const root = join(dirname(fileURLToPath(import.meta.url)), '..')
 const args = process.argv.slice(2)
 const name = args.find((a) => !a.startsWith('--'))
 const flag = (f) => {
@@ -18,7 +17,7 @@ const flag = (f) => {
   return i >= 0 ? args[i + 1] : undefined
 }
 
-if (!name || !/^[a-z][a-z0-9-]*$/.test(name)) {
+if (!name || !NAME_RE.test(name)) {
   console.error('Usage: npm run new-app -- <name> [--title "Concept title"] [--owner "Your name"]')
   console.error('  <name> must be lowercase kebab-case, e.g. boss-fight-train')
   process.exit(1)
@@ -30,15 +29,7 @@ if (existsSync(dest)) {
   process.exit(1)
 }
 
-// Next free dev port: one above the highest port any app already uses (apps start at 5101).
-let port = 5100
-for (const dir of readdirSync(join(root, 'apps'))) {
-  const cfg = join(root, 'apps', dir, 'vite.config.ts')
-  if (!existsSync(cfg)) continue
-  const m = readFileSync(cfg, 'utf8').match(/server:\s*\{[^}]*port:\s*(\d+)/)
-  if (m) port = Math.max(port, Number(m[1]))
-}
-port += 1
+const port = nextPort()
 
 const title = flag('--title') ?? name.replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())
 const owner = flag('--owner') ?? 'TBD'
@@ -58,6 +49,12 @@ const fill = (dir) => {
   }
 }
 fill(dest)
+
+// The template keeps valid JSON with a placeholder string; store the real port as a number.
+const pkgPath = join(dest, 'package.json')
+const pkg = JSON.parse(readFileSync(pkgPath, 'utf8'))
+pkg.hype.port = port
+writeFileSync(pkgPath, JSON.stringify(pkg, null, 2) + '\n')
 
 console.log(`
 Created apps/${name}  (@hype/${name}, dev port ${port})

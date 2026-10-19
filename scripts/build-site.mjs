@@ -12,10 +12,8 @@
 
 import { spawnSync } from 'node:child_process'
 import { cpSync, existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs'
-import { dirname, join } from 'node:path'
-import { fileURLToPath } from 'node:url'
-
-const root = join(dirname(fileURLToPath(import.meta.url)), '..')
+import { join } from 'node:path'
+import { buildOutput, root } from './lib.mjs'
 const siteBase = (process.env.SITE_BASE ?? '/').replace(/\/?$/, '/')
 const out = join(root, 'site')
 const only = process.argv.slice(2)
@@ -43,7 +41,14 @@ for (const dir of readdirSync(join(root, 'apps')).sort()) {
     failed.push(pkg.name)
     continue
   }
-  cpSync(join(root, 'apps', dir, 'dist'), join(out, dir), { recursive: true })
+  // Vite builds to dist/, Create React App to build/, Next.js static export to out/.
+  const output = buildOutput(dir)
+  if (!output) {
+    console.error(`  ${pkg.name} built, but no dist/, build/ or out/ folder was found. Set "hype.out" in its package.json.`)
+    failed.push(pkg.name)
+    continue
+  }
+  cpSync(output, join(out, dir), { recursive: true })
   built.push({ dir, name: pkg.name, description: pkg.description ?? '' })
 }
 
