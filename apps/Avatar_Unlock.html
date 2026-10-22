@@ -1,0 +1,964 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Community Cosmetic Unlock</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500..800&family=Figtree:wght@400;500;600;700;800&display=swap">
+<style>
+  /* Layout: Twitch-style watch page. Left column holds the stream, channel info and the unlock panel (the focus). Right column is chat. A dashed prototype strip sits above for jumping between progress states. Dark by design, so one theme. */
+  :root {
+    --bg: #0f0d15;
+    --surface: #171421;
+    --surface-2: #1f1b2c;
+    --line: #2d2840;
+    --fg: #f2f0f7;
+    --muted: #a8a2bd;
+    --accent: #9146ff;
+    --accent-hi: #b48aff;
+    --accent-lo: #5b2bc7;
+    --gold: #f5c451;
+    --gold-lo: #e59a1f;
+    --live: #ff4d4f;
+    --warn: #ff8a8c;
+    --font-display: "Bricolage Grotesque", "Trebuchet MS", system-ui, sans-serif;
+    --font-body: "Figtree", system-ui, -apple-system, "Segoe UI", sans-serif;
+    color-scheme: dark;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--fg);
+    font-family: var(--font-body);
+    font-size: 14px;
+    line-height: 1.45;
+  }
+  button { font-family: inherit; color: inherit; cursor: pointer; }
+  button:focus-visible, input:focus-visible, a:focus-visible {
+    outline: 3px solid var(--accent-hi);
+    outline-offset: 2px;
+  }
+  .inner {
+    max-width: 1560px;
+    margin: 0 auto;
+    padding-left: max(16px, env(safe-area-inset-left, 0px));
+    padding-right: max(16px, env(safe-area-inset-right, 0px));
+  }
+  .gem { width: 1em; height: 1em; flex: none; display: inline-block; vertical-align: -0.14em; }
+
+  /* top bar */
+  .topbar { background: var(--surface); border-bottom: 1px solid var(--line); }
+  .topbar .inner { display: flex; align-items: center; gap: 20px; min-height: 52px; padding-block: 8px; }
+  .logo { width: 30px; height: 30px; border-radius: 8px; background: var(--accent); display: grid; place-items: center; flex: none; }
+  .nav { display: flex; gap: 18px; font-weight: 600; color: var(--muted); }
+  .nav span:first-child { color: var(--fg); }
+  .spacer { flex: 1; }
+  .balance { display: inline-flex; align-items: center; gap: 6px; background: var(--surface-2); border: 1px solid var(--line); border-radius: 999px; padding: 5px 12px; font-weight: 700; font-variant-numeric: tabular-nums; }
+  .balance .gem { color: var(--accent-hi); font-size: 15px; }
+  .me { width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, #5b2bc7, #b48aff); display: grid; place-items: center; font-weight: 800; flex: none; }
+
+  /* prototype strip */
+  .dev { background: #120f1b; border-bottom: 1px dashed var(--line); }
+  .dev .inner { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 10px; padding-block: 9px; }
+  .dev-label { font-size: 11px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); margin-right: 4px; }
+  .chip { border: 1px solid var(--line); background: var(--surface-2); border-radius: 999px; padding: 5px 12px; font-weight: 600; font-size: 13px; font-variant-numeric: tabular-nums; transition: border-color 0.15s, background 0.15s; }
+  .chip:hover { border-color: var(--accent); background: #2a2340; }
+  .chip.reset { border-style: dashed; }
+  .toggle { display: inline-flex; align-items: center; gap: 8px; font-weight: 600; font-size: 13px; color: var(--muted); margin-left: auto; cursor: pointer; }
+  .toggle input { width: 16px; height: 16px; accent-color: var(--accent); }
+
+  /* layout */
+  .layout { display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 16px; padding-block: 16px 32px; align-items: start; }
+  .main-col { display: grid; gap: 16px; min-width: 0; }
+
+  /* player */
+  .player { position: relative; border-radius: 12px; overflow: hidden; aspect-ratio: 16 / 9; max-width: 100%; background: #000; border: 1px solid var(--line); }
+  .player > svg { width: 100%; height: 100%; display: block; }
+  .pill { position: absolute; top: 12px; display: inline-flex; align-items: center; gap: 6px; border-radius: 6px; padding: 3px 8px; font-size: 12px; font-weight: 700; }
+  .pill.live { left: 12px; background: var(--live); color: #fff; letter-spacing: 0.06em; text-transform: uppercase; }
+  .pill.views { left: 70px; background: rgba(15, 13, 21, 0.72); }
+  .hud { position: absolute; top: 10px; right: 10px; display: flex; flex-direction: column; align-items: center; padding: 0; border: 0; background: none; transition: transform 0.15s; }
+  .hud:hover { transform: translateY(-1px) scale(1.04); }
+  .hud-ring { width: 78px; height: 78px; display: block; filter: drop-shadow(0 0 7px rgba(145, 70, 255, 0.55)); }
+  .hud-track { fill: rgba(15, 13, 21, 0.82); stroke: rgba(180, 138, 255, 0.22); stroke-width: 4; }
+  .hud-arc { fill: none; stroke: var(--accent-hi); stroke-width: 4; stroke-linecap: round; stroke-dasharray: 289.03; stroke-dashoffset: 289.03; transform: rotate(-90deg); transform-origin: 50px 50px; }
+  .hud-pct { position: relative; margin-top: -13px; padding: 1px 8px; border-radius: 999px; background: rgba(15, 13, 21, 0.92); border: 1px solid rgba(180, 138, 255, 0.5); font: 800 12px/1.5 var(--font-body); font-variant-numeric: tabular-nums; color: var(--fg); }
+  .hud.done .hud-ring { animation: hudGlow 2.2s ease-in-out infinite; }
+  .hud.done .hud-arc { stroke: var(--gold); }
+  .hud.done .hud-pct { border-color: rgba(245, 196, 81, 0.7); color: var(--gold); }
+  .hud.pop .hud-ring { animation: hudPop 1.2s cubic-bezier(0.2, 1.4, 0.4, 1); }
+  .bob { animation: bob 3.4s ease-in-out infinite; }
+  .worn-hat { opacity: 0; transform: translateY(-34px); transition: opacity 0.5s ease, transform 0.7s cubic-bezier(0.2, 1.3, 0.4, 1); }
+  .player.worn .worn-hat { opacity: 1; transform: none; }
+
+  /* channel info */
+  .info { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+  .ch-avatar { width: 58px; height: 58px; border-radius: 50%; flex: none; display: grid; place-items: center; font: 800 24px var(--font-display); background: linear-gradient(135deg, #7d4cf0, #f5c451); border: 3px solid var(--accent); }
+  .ch-text { flex: 1; min-width: 220px; }
+  .ch-name { display: flex; align-items: center; gap: 6px; font: 700 18px var(--font-display); }
+  .ch-title { color: var(--fg); font-weight: 500; }
+  .ch-meta { color: var(--muted); font-size: 13px; display: flex; flex-wrap: wrap; gap: 4px 12px; margin-top: 2px; }
+  .ch-meta .cat { color: var(--accent-hi); font-weight: 700; }
+  .follow { background: var(--surface-2); border: 1px solid var(--line); border-radius: 8px; padding: 8px 16px; font-weight: 700; transition: background 0.15s, border-color 0.15s; }
+  .follow:hover { border-color: var(--accent); }
+  .follow[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: #fff; }
+
+  /* unlock panel */
+  .unlock { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 22px; transition: border-color 0.4s, box-shadow 0.4s; }
+  .unlock[data-state="almost"] { border-color: #7a4de0; box-shadow: 0 0 0 1px rgba(145, 70, 255, 0.35), 0 0 38px rgba(145, 70, 255, 0.22); }
+  .unlock[data-state="unlocked"] { border-color: rgba(245, 196, 81, 0.75); box-shadow: 0 0 0 1px rgba(245, 196, 81, 0.35), 0 0 46px rgba(245, 196, 81, 0.18); }
+  .u-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; flex-wrap: wrap; }
+  .eyebrow { margin: 0 0 4px; font-size: 11px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--accent-hi); }
+  .u-head h2 { margin: 0; font: 700 28px/1.1 var(--font-display); text-wrap: balance; }
+  .u-sub { margin: 6px 0 0; color: var(--muted); }
+  .status { border-radius: 999px; padding: 6px 14px; font-weight: 700; font-size: 13px; border: 1px solid var(--line); background: var(--surface-2); color: var(--muted); transition: all 0.3s; white-space: nowrap; }
+  .unlock[data-state="progress"] .status { color: var(--accent-hi); border-color: rgba(180, 138, 255, 0.5); }
+  .unlock[data-state="almost"] .status { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .unlock[data-state="unlocked"] .status { background: var(--gold); border-color: var(--gold); color: #2a1a00; }
+
+  .u-body { display: grid; grid-template-columns: minmax(0, 340px) minmax(0, 1fr); gap: 28px; margin-top: 18px; align-items: center; }
+  .stage { position: relative; aspect-ratio: 1; max-width: 100%; border-radius: 14px; overflow: hidden; background: radial-gradient(circle at 50% 42%, #302656 0%, #1a1429 62%, #130f1e 100%); border: 1px solid var(--line); transition: border-color 0.4s; }
+  .stage > svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+  .unlock[data-state="almost"] .stage { animation: stagePulse 1.9s ease-in-out infinite; }
+  .unlock[data-state="unlocked"] .stage { border-color: rgba(245, 196, 81, 0.7); }
+  .stage.celebrate::after { content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; background: radial-gradient(circle at 50% 45%, rgba(255, 224, 138, 0.55), transparent 62%); animation: flash 1.6s ease-out forwards; }
+  .badge-unlocked { position: absolute; left: 50%; bottom: 14px; transform: translate(-50%, 14px); opacity: 0; background: linear-gradient(180deg, #ffe08a, var(--gold-lo)); color: #2a1a00; font: 800 15px var(--font-display); letter-spacing: 0.02em; padding: 6px 16px; border-radius: 999px; transition: opacity 0.4s, transform 0.5s cubic-bezier(0.2, 1.4, 0.4, 1); pointer-events: none; }
+  .unlock[data-state="unlocked"] .badge-unlocked { opacity: 1; transform: translate(-50%, 0); }
+  .spark { position: absolute; left: 50%; top: 46%; width: var(--s); height: var(--s); background: var(--c); opacity: 0; pointer-events: none; clip-path: polygon(50% 0, 62% 38%, 100% 50%, 62% 62%, 50% 100%, 38% 62%, 0 50%, 38% 38%); animation: spark 1.6s ease-out forwards; animation-delay: var(--d); }
+  .plus { position: absolute; left: 50%; top: 34%; font: 800 26px var(--font-display); color: var(--accent-hi); text-shadow: 0 2px 14px rgba(145, 70, 255, 0.8); pointer-events: none; animation: floatUp 1.5s ease-out forwards; }
+
+  .u-info { display: grid; gap: 14px; min-width: 0; }
+  .msg { margin: 0; font: 600 19px/1.3 var(--font-display); text-wrap: balance; min-height: 2.6em; display: flex; align-items: center; }
+  .numbers { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+  .big { font: 800 42px/1 var(--font-body); font-variant-numeric: tabular-nums; letter-spacing: -0.01em; }
+  .of { color: var(--muted); font-size: 16px; font-weight: 600; font-variant-numeric: tabular-nums; }
+  .pct { margin-left: auto; font: 800 24px var(--font-body); color: var(--accent-hi); font-variant-numeric: tabular-nums; }
+  .unlock[data-state="unlocked"] .pct { color: var(--gold); }
+  .bar { position: relative; height: 16px; border-radius: 999px; background: #0c0a12; border: 1px solid var(--line); overflow: hidden; }
+  .fill { position: absolute; inset: 0 auto 0 0; width: 0; border-radius: 999px; background: linear-gradient(90deg, var(--accent-lo), var(--accent)); box-shadow: 0 0 14px rgba(145, 70, 255, 0.6); overflow: hidden; }
+  .fill::after { content: ""; position: absolute; inset: 0; background: linear-gradient(100deg, transparent 30%, rgba(255, 255, 255, 0.35) 50%, transparent 70%); transform: translateX(-100%); }
+  .unlock[data-state="almost"] .fill::after { animation: shimmer 1.6s linear infinite; }
+  .unlock[data-state="unlocked"] .fill { background: linear-gradient(90deg, var(--gold-lo), #ffe08a); box-shadow: 0 0 14px rgba(245, 196, 81, 0.6); }
+  .tick { position: absolute; top: 0; bottom: 0; width: 2px; background: rgba(255, 255, 255, 0.2); }
+  .remaining { margin: 0; display: flex; align-items: center; gap: 7px; font-weight: 700; font-size: 15px; color: var(--fg); }
+  .remaining .gem { color: var(--accent-hi); font-size: 17px; }
+  .unlock[data-state="unlocked"] .remaining .gem { color: var(--gold); }
+  .cta { display: flex; align-items: center; justify-content: center; gap: 9px; width: 100%; padding: 15px 18px; border: 0; border-radius: 10px; background: var(--accent); color: #fff; font-weight: 800; font-size: 17px; box-shadow: 0 6px 22px rgba(145, 70, 255, 0.38); transition: background 0.15s, transform 0.1s, box-shadow 0.2s; }
+  .cta:hover:not(:disabled) { background: #a566ff; box-shadow: 0 8px 28px rgba(145, 70, 255, 0.5); }
+  .cta:active:not(:disabled) { transform: translateY(1px); }
+  .cta:disabled { opacity: 0.55; cursor: default; }
+  .cta .gem { font-size: 19px; }
+  .cta[data-mode="reward"] { background: linear-gradient(180deg, #ffe08a, var(--gold-lo)); color: #2a1a00; box-shadow: 0 6px 24px rgba(245, 196, 81, 0.35); }
+  .cta[data-mode="reward"]:hover:not(:disabled) { background: linear-gradient(180deg, #fff0b8, #f2ac3a); }
+  .contrib-h { margin: 4px 0 0; font-size: 11px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
+  .top3 { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+  .top3 li { display: flex; align-items: center; gap: 10px; font-weight: 600; }
+  .top3 .rank { width: 22px; height: 22px; border-radius: 6px; background: var(--surface-2); border: 1px solid var(--line); display: grid; place-items: center; font-size: 12px; font-weight: 800; color: var(--accent-hi); }
+  .top3 .amt-t { margin-left: auto; font-variant-numeric: tabular-nums; color: var(--muted); display: inline-flex; align-items: center; gap: 4px; }
+  .top3 .empty { color: var(--muted); font-weight: 500; }
+
+  /* chat */
+  .chat { position: sticky; top: 12px; height: calc(100dvh - 24px); min-height: 520px; display: flex; flex-direction: column; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
+  .chat-h { padding: 12px 14px; text-align: center; font-weight: 700; border-bottom: 1px solid var(--line); }
+  .chat-list { flex: 1; min-height: 0; overflow-y: auto; padding: 8px 12px; }
+  .line { padding: 3px 0; font-size: 13.5px; line-height: 1.5; overflow-wrap: anywhere; }
+  .line .u { font-weight: 700; }
+  .badge { display: inline-grid; place-items: center; width: 16px; height: 16px; border-radius: 3px; margin-right: 5px; vertical-align: 1px; font-size: 10px; font-weight: 800; color: #0f0d15; }
+  .badge.mod { background: #3ddc97; }
+  .badge.sub { background: var(--accent-hi); }
+  .line.cheer, .line.notice { margin: 5px -4px; padding: 7px 10px; border-radius: 6px; border-left: 3px solid var(--accent); background: rgba(145, 70, 255, 0.14); }
+  .line.cheer .gem { color: var(--accent-hi); font-size: 14px; margin-right: 4px; }
+  .line.notice { font-weight: 700; }
+  .line.notice.gold { border-left-color: var(--gold); background: rgba(245, 196, 81, 0.14); }
+  .line.notice.sys { border-left-color: var(--line); background: var(--surface-2); color: var(--muted); font-weight: 500; }
+  .chat-form { display: flex; gap: 8px; padding: 10px 12px; border-top: 1px solid var(--line); }
+  .chat-form input { flex: 1; min-width: 0; background: #0e0c14; color: var(--fg); border: 1px solid var(--line); border-radius: 8px; padding: 9px 12px; font: inherit; }
+  .chat-form input::placeholder { color: #7f799a; }
+  .chat-form button { background: var(--accent); border: 0; border-radius: 8px; padding: 0 16px; font-weight: 700; color: #fff; }
+  .chat-form button:hover { background: #a566ff; }
+
+  /* dialogs */
+  dialog.dlg { border: 1px solid var(--line); background: var(--surface); color: var(--fg); border-radius: 18px; padding: 0; width: min(460px, calc(100vw - 32px)); max-height: calc(100dvh - 32px); overflow: auto; box-shadow: 0 30px 80px rgba(0, 0, 0, 0.6); }
+  dialog.dlg::backdrop { background: rgba(8, 6, 14, 0.72); backdrop-filter: blur(3px); }
+  .dlg-in { padding: 22px; display: grid; gap: 16px; }
+  .dlg-h { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
+  .dlg-h h3 { margin: 0; font: 700 22px/1.15 var(--font-display); }
+  .dlg-h p { margin: 4px 0 0; color: var(--muted); }
+  .x { width: 32px; height: 32px; border-radius: 50%; border: 1px solid var(--line); background: var(--surface-2); display: grid; place-items: center; flex: none; }
+  .x:hover { border-color: var(--accent); }
+  .amts { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+  .amt { display: flex; align-items: center; justify-content: center; gap: 7px; padding: 14px 10px; border-radius: 10px; border: 1.5px solid var(--line); background: var(--surface-2); font-weight: 800; font-size: 18px; font-variant-numeric: tabular-nums; transition: border-color 0.15s, background 0.15s; }
+  .amt .gem { color: var(--accent-hi); font-size: 18px; }
+  .amt:hover:not(:disabled) { border-color: var(--accent-hi); }
+  .amt[aria-pressed="true"] { border-color: var(--accent); background: rgba(145, 70, 255, 0.2); box-shadow: inset 0 0 0 1px var(--accent); }
+  .amt:disabled { opacity: 0.38; cursor: not-allowed; }
+  .field label { display: block; font-size: 12px; font-weight: 700; color: var(--muted); margin-bottom: 6px; letter-spacing: 0.04em; text-transform: uppercase; }
+  .field input { width: 100%; background: #0e0c14; color: var(--fg); border: 1.5px solid var(--line); border-radius: 10px; padding: 11px 14px; font: 700 16px var(--font-body); font-variant-numeric: tabular-nums; }
+  .field input:focus { border-color: var(--accent); }
+  .sum { display: grid; gap: 7px; background: #100d18; border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; }
+  .sum div { display: flex; justify-content: space-between; gap: 12px; color: var(--muted); }
+  .sum b { color: var(--fg); font-variant-numeric: tabular-nums; }
+  .note { margin: 0; font-size: 13px; color: var(--muted); min-height: 1.3em; }
+  .note.err { color: var(--warn); }
+  .dlg-actions { display: grid; grid-template-columns: 1fr 2fr; gap: 10px; }
+  .btn { padding: 13px 16px; border-radius: 10px; border: 1px solid var(--line); background: var(--surface-2); font-weight: 700; font-size: 15px; }
+  .btn:hover { border-color: var(--accent-hi); }
+  .btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 800; }
+  .btn.primary:hover:not(:disabled) { background: #a566ff; }
+  .btn.primary:disabled { opacity: 0.45; cursor: not-allowed; }
+  .btn.gold { background: linear-gradient(180deg, #ffe08a, var(--gold-lo)); border-color: transparent; color: #2a1a00; font-weight: 800; }
+  .btn[aria-pressed="true"] { background: var(--surface-2); color: var(--gold); border-color: rgba(245, 196, 81, 0.6); }
+
+  .reward-stage { position: relative; aspect-ratio: 1 / 0.8; border-radius: 14px; border: 1px solid rgba(245, 196, 81, 0.5); background: radial-gradient(circle at 50% 45%, #4a3a78 0%, #1a1429 70%); overflow: hidden; }
+  .reward-stage svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+  .equip { display: flex; align-items: center; gap: 14px; }
+  .equip svg { width: 84px; height: 84px; flex: none; border-radius: 12px; background: var(--surface-2); border: 1px solid var(--line); }
+  .equip .hat-on { opacity: 0; transition: opacity 0.3s; }
+  .equip.on .hat-on { opacity: 1; }
+  .equip p { margin: 0; color: var(--muted); }
+  .equip b { display: block; color: var(--fg); font-size: 15px; }
+
+  .toast { position: fixed; left: 50%; bottom: calc(env(safe-area-inset-bottom, 0px) + 18px); transform: translate(-50%, 24px); opacity: 0; pointer-events: none; z-index: 50; max-width: calc(100vw - 32px); background: #251f38; border: 1px solid var(--accent); border-radius: 10px; padding: 10px 16px; font-weight: 600; box-shadow: 0 12px 34px rgba(0, 0, 0, 0.5); transition: opacity 0.25s, transform 0.3s; text-align: center; }
+  .toast.show { opacity: 1; transform: translate(-50%, 0); }
+
+  @keyframes bob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(3px); } }
+  @keyframes stagePulse { 0%, 100% { box-shadow: 0 0 0 0 rgba(145, 70, 255, 0.0), inset 0 0 30px rgba(145, 70, 255, 0.1); } 50% { box-shadow: 0 0 34px 2px rgba(145, 70, 255, 0.45), inset 0 0 44px rgba(145, 70, 255, 0.25); } }
+  @keyframes shimmer { to { transform: translateX(100%); } }
+  @keyframes flash { 0% { opacity: 0; } 20% { opacity: 1; } 100% { opacity: 0; } }
+  @keyframes floatUp { 0% { opacity: 0; transform: translate(-50%, 18px) scale(0.8); } 20% { opacity: 1; } 100% { opacity: 0; transform: translate(-50%, -54px) scale(1.1); } }
+  @keyframes spark { 0% { opacity: 1; transform: translate(-50%, -50%) scale(0.2) rotate(0deg); } 100% { opacity: 0; transform: translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))) scale(1) rotate(120deg); } }
+  @keyframes hudPop { 0% { transform: scale(1); } 35% { transform: scale(1.3) rotate(-6deg); } 100% { transform: scale(1); } }
+  @keyframes hudGlow { 0%, 100% { filter: drop-shadow(0 0 6px rgba(245, 196, 81, 0.5)); } 50% { filter: drop-shadow(0 0 14px rgba(245, 196, 81, 0.95)); } }
+  @keyframes auraPulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.06); } }
+  .unlock[data-state="almost"] #aura, .unlock[data-state="unlocked"] #aura { transform-origin: 150px 150px; animation: auraPulse 1.9s ease-in-out infinite; }
+
+  @media (max-width: 1023px) {
+    .layout { grid-template-columns: minmax(0, 1fr); }
+    .chat { position: static; height: 480px; min-height: 0; }
+  }
+  @media (max-width: 700px) {
+    .u-body { grid-template-columns: minmax(0, 1fr); gap: 20px; }
+    .stage { max-width: 360px; width: 100%; margin: 0 auto; }
+    .unlock { padding: 16px; }
+    .u-head h2 { font-size: 24px; }
+    .big { font-size: 36px; }
+    .nav { display: none; }
+    .toggle { margin-left: 0; }
+  }
+  @media (max-width: 520px) {
+    .hud-ring { width: 62px; height: 62px; }
+    .pill.views { display: none; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation: none !important; transition-duration: 0.01ms !important; }
+  }
+</style>
+
+<!-- shared artwork: the cosmetic, silhouette filter, icons -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <defs>
+    <linearGradient id="gCone" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#c4a0ff"/><stop offset="0.5" stop-color="#7a3df0"/><stop offset="1" stop-color="#43209f"/>
+    </linearGradient>
+    <linearGradient id="gBrim" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#7340ea"/><stop offset="1" stop-color="#341780"/>
+    </linearGradient>
+    <linearGradient id="gGold" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#fff0b8"/><stop offset="0.5" stop-color="#f5c451"/><stop offset="1" stop-color="#e08a14"/>
+    </linearGradient>
+    <path id="starP" d="M0 -10 L2.9 -3.1 L9.5 -3.1 L4.2 1.6 L5.9 8.1 L0 4.2 L-5.9 8.1 L-4.2 1.6 L-9.5 -3.1 L-2.9 -3.1 Z"/>
+    <filter id="sil" x="-15%" y="-15%" width="130%" height="130%" color-interpolation-filters="sRGB">
+      <feColorMatrix in="SourceGraphic" type="matrix" values="0 0 0 0 0.04  0 0 0 0 0.03  0 0 0 0 0.07  0 0 0 1 0" result="dark"/>
+      <feGaussianBlur in="SourceAlpha" stdDeviation="5" result="b"/>
+      <feColorMatrix in="b" type="matrix" values="0 0 0 0 0.57  0 0 0 0 0.27  0 0 0 0 1  0 0 0 0.55 0" result="glow"/>
+      <feMerge><feMergeNode in="glow"/><feMergeNode in="dark"/></feMerge>
+    </filter>
+    <symbol id="gem" viewBox="0 0 16 16">
+      <path d="M8 1 L14.5 6 L8 15 L1.5 6 Z" fill="currentColor"/>
+      <path d="M1.5 6 H14.5 M5.2 6 L8 15 L10.8 6 L8 1 Z" fill="none" stroke="#0f0d15" stroke-opacity="0.35" stroke-width="0.9" stroke-linejoin="round"/>
+    </symbol>
+    <g id="hatArt">
+      <ellipse cx="150" cy="236" rx="122" ry="24" fill="url(#gBrim)" stroke="#9a6dff" stroke-opacity="0.55" stroke-width="2"/>
+      <path d="M70 230 C92 170 112 110 140 64 C152 44 172 30 200 34 C214 36 224 44 222 54 C214 50 202 50 192 58 C176 72 188 120 214 170 C226 194 236 212 232 230 C200 244 100 244 70 230 Z" fill="url(#gCone)"/>
+      <path d="M96 192 C110 142 126 98 150 68" stroke="#fff" stroke-opacity="0.38" stroke-width="5" stroke-linecap="round" fill="none"/>
+      <path d="M73 214 C108 232 192 232 229 214 L232 232 C196 247 104 247 70 232 Z" fill="#1d1050"/>
+      <path d="M73 214 C108 232 192 232 229 214" stroke="url(#gGold)" stroke-width="3" fill="none"/>
+      <rect x="136" y="220" width="28" height="22" rx="5" fill="url(#gGold)"/>
+      <rect x="141" y="225" width="18" height="12" rx="3" fill="#1d1050"/>
+      <use href="#starP" transform="translate(128 150) scale(1.25)" fill="url(#gGold)"/>
+      <use href="#starP" transform="translate(168 112) scale(0.95)" fill="url(#gGold)"/>
+      <use href="#starP" transform="translate(154 188) scale(0.8)" fill="url(#gGold)"/>
+      <circle cx="112" cy="196" r="3" fill="#ffe08a"/>
+      <circle cx="184" cy="152" r="2.6" fill="#ffe08a"/>
+      <circle cx="146" cy="92" r="2.4" fill="#ffe08a"/>
+      <circle cx="212" cy="46" r="9" fill="url(#gGold)"/>
+    </g>
+  </defs>
+</svg>
+
+<header class="topbar">
+  <div class="inner">
+    <div class="logo" aria-hidden="true">
+      <svg width="16" height="16" viewBox="0 0 16 16"><path d="M2 2h12v8l-3 3H8l-2 2v-2H2z" fill="#fff"/></svg>
+    </div>
+    <nav class="nav" aria-label="Prototype navigation"><span>Following</span><span>Browse</span></nav>
+    <div class="spacer"></div>
+    <div class="balance" title="Simulated Bits balance"><svg class="gem" aria-hidden="true"><use href="#gem"/></svg><span id="balance">12,500</span></div>
+    <div class="me" aria-hidden="true">Y</div>
+  </div>
+</header>
+
+<section class="dev" aria-label="Prototype controls">
+  <div class="inner">
+    <span class="dev-label">Prototype controls</span>
+    <button class="chip" type="button" data-p="0">0%</button>
+    <button class="chip" type="button" data-p="25">25%</button>
+    <button class="chip" type="button" data-p="50">50%</button>
+    <button class="chip" type="button" data-p="75">75%</button>
+    <button class="chip" type="button" data-p="95">95%</button>
+    <button class="chip" type="button" data-p="100">100%</button>
+    <button class="chip reset" type="button" id="reset">Reset</button>
+    <label class="toggle" for="simToggle"><input type="checkbox" id="simToggle"> Simulated viewers contribute</label>
+  </div>
+</section>
+
+<div class="inner">
+  <main class="layout">
+    <div class="main-col">
+
+      <section class="player" id="player" aria-label="Livestream">
+        <svg viewBox="0 0 640 360" preserveAspectRatio="xMidYMid slice" role="img" aria-label="Livestream of LunaPlays, an illustrated streamer wearing a headset">
+          <defs>
+            <linearGradient id="bgS" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#31205f"/><stop offset="1" stop-color="#110c1f"/></linearGradient>
+            <linearGradient id="hood" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7d4cf0"/><stop offset="1" stop-color="#3b1d88"/></linearGradient>
+            <radialGradient id="lamp"><stop offset="0" stop-color="#b48aff" stop-opacity="0.55"/><stop offset="1" stop-color="#b48aff" stop-opacity="0"/></radialGradient>
+          </defs>
+          <rect width="640" height="360" fill="url(#bgS)"/>
+          <circle cx="120" cy="90" r="130" fill="url(#lamp)"/>
+          <circle cx="540" cy="70" r="90" fill="url(#lamp)" opacity="0.6"/>
+          <rect x="70" y="150" width="150" height="6" rx="3" fill="#b48aff" opacity="0.8"/>
+          <rect x="70" y="166" width="96" height="6" rx="3" fill="#3ddc97" opacity="0.6"/>
+          <rect x="470" y="168" width="130" height="6" rx="3" fill="#4a3d70"/>
+          <rect x="482" y="138" width="22" height="30" rx="3" fill="#6b57a8"/>
+          <rect x="510" y="148" width="18" height="20" rx="3" fill="#3ddc97" opacity="0.7"/>
+          <circle cx="572" cy="152" r="14" fill="#f5c451" opacity="0.85"/>
+          <g class="bob">
+            <path d="M196 362 C202 290 250 264 320 264 C390 264 438 290 444 362 Z" fill="url(#hood)"/>
+            <path d="M296 266 C300 300 310 318 320 322 C330 318 340 300 344 266" fill="none" stroke="#2c1568" stroke-width="5" stroke-linecap="round"/>
+            <rect x="302" y="236" width="36" height="34" rx="12" fill="#e8b895"/>
+            <circle cx="320" cy="196" r="46" fill="#f0c4a0"/>
+            <path d="M270 198 C266 148 300 138 322 140 C354 140 374 160 370 198 C360 172 342 166 320 166 C298 166 280 174 270 198 Z" fill="#2b1d3f"/>
+            <circle cx="304" cy="200" r="4" fill="#1b1325"/>
+            <circle cx="338" cy="200" r="4" fill="#1b1325"/>
+            <path d="M306 220 Q321 233 336 220" fill="none" stroke="#8a4b45" stroke-width="3" stroke-linecap="round"/>
+            <path d="M274 198 C268 146 372 146 366 198" fill="none" stroke="#1a1822" stroke-width="8" stroke-linecap="round"/>
+            <rect x="262" y="188" width="16" height="32" rx="7" fill="#1a1822"/>
+            <rect x="262" y="196" width="6" height="16" rx="3" fill="#9146ff"/>
+            <rect x="362" y="188" width="16" height="32" rx="7" fill="#1a1822"/>
+            <path d="M270 216 C274 244 296 250 312 244" fill="none" stroke="#1a1822" stroke-width="4" stroke-linecap="round"/>
+            <circle cx="314" cy="244" r="6" fill="#1a1822"/>
+            <g class="worn-hat"><g transform="translate(265 78) scale(0.36)"><use href="#hatArt"/></g></g>
+          </g>
+          <rect x="120" y="318" width="400" height="48" fill="#1a1428"/>
+          <rect x="120" y="318" width="400" height="3" fill="#4a3d70"/>
+        </svg>
+        <span class="pill live">Live</span>
+        <span class="pill views">12.4K watching</span>
+        <button class="hud" id="hud" type="button" aria-label="Community unlock progress. Jump to the unlock panel">
+          <svg class="hud-ring" viewBox="0 0 100 100" aria-hidden="true">
+            <defs>
+              <mask id="hudMask" maskUnits="userSpaceOnUse" x="0" y="0" width="300" height="300">
+                <rect id="hudMA" x="0" y="292" width="300" height="8" fill="#fff"/>
+                <rect id="hudMB" x="0" y="268" width="300" height="24" fill="url(#fadeG)"/>
+              </mask>
+            </defs>
+            <circle class="hud-track" cx="50" cy="50" r="46"/>
+            <circle class="hud-arc" id="hudRing" cx="50" cy="50" r="46"/>
+            <g transform="translate(14 17) scale(0.24)">
+              <use href="#hatArt" filter="url(#sil)"/>
+              <g mask="url(#hudMask)"><use href="#hatArt"/></g>
+            </g>
+          </svg>
+          <span class="hud-pct" id="hudPct">0%</span>
+        </button>
+      </section>
+
+      <section class="info" aria-label="Channel">
+        <div class="ch-avatar" aria-hidden="true">L</div>
+        <div class="ch-text">
+          <div class="ch-name">LunaPlays
+            <svg width="16" height="16" viewBox="0 0 16 16" aria-label="Verified"><circle cx="8" cy="8" r="8" fill="#9146ff"/><path d="M4.5 8.3l2.2 2.2 4.6-4.8" stroke="#fff" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </div>
+          <div class="ch-title">Cosmetic unlock day: help us reveal the Starfall Wizard Hat</div>
+          <div class="ch-meta"><span class="cat">Just Chatting</span><span>English</span><span>Community goal</span></div>
+        </div>
+        <button class="follow" id="follow" type="button" aria-pressed="false">Follow</button>
+      </section>
+
+      <section class="unlock" id="unlock" data-state="locked" aria-labelledby="unlockTitle">
+        <div class="u-head">
+          <div>
+            <p class="eyebrow">Community unlock</p>
+            <h2 id="unlockTitle">Starfall Wizard Hat</h2>
+            <p class="u-sub">Epic avatar headwear. The whole channel is working on it together.</p>
+          </div>
+          <span class="status" id="statusPill">Locked</span>
+        </div>
+
+        <div class="u-body">
+          <div class="stage" id="stage">
+            <svg viewBox="0 0 300 300" role="img" id="stageSvg" aria-label="Starfall Wizard Hat, 0% revealed">
+              <defs>
+                <linearGradient id="fadeG" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0" stop-color="#000"/><stop offset="0.5" stop-color="#555"/><stop offset="1" stop-color="#fff"/>
+                </linearGradient>
+                <linearGradient id="edgeG" x1="0" y1="0" x2="1" y2="0">
+                  <stop offset="0" stop-color="#b48aff" stop-opacity="0"/><stop offset="0.5" stop-color="#e6d6ff"/><stop offset="1" stop-color="#b48aff" stop-opacity="0"/>
+                </linearGradient>
+                <radialGradient id="auraG"><stop offset="0" stop-color="#9146ff" stop-opacity="0.8"/><stop offset="1" stop-color="#9146ff" stop-opacity="0"/></radialGradient>
+                <filter id="blur3" x="-20%" y="-300%" width="140%" height="700%"><feGaussianBlur stdDeviation="3"/></filter>
+                <mask id="revealMask" maskUnits="userSpaceOnUse" x="0" y="0" width="300" height="300">
+                  <rect id="mA" x="0" y="292" width="300" height="8" fill="#fff"/>
+                  <rect id="mB" x="0" y="268" width="300" height="24" fill="url(#fadeG)"/>
+                </mask>
+              </defs>
+              <circle id="aura" cx="150" cy="150" r="140" fill="url(#auraG)" style="opacity:0.18"/>
+              <use href="#hatArt" filter="url(#sil)"/>
+              <g mask="url(#revealMask)"><use href="#hatArt"/></g>
+              <rect id="edgeGlow" x="40" y="277" width="220" height="5" rx="2.5" fill="url(#edgeG)" filter="url(#blur3)" style="opacity:0"/>
+              <rect id="edge" x="40" y="278" width="220" height="2" rx="1" fill="url(#edgeG)" style="opacity:0"/>
+            </svg>
+            <span class="badge-unlocked">Unlocked!</span>
+          </div>
+
+          <div class="u-info">
+            <p class="msg" id="msg" aria-live="polite"></p>
+            <div class="numbers">
+              <span class="big" id="bitsNow">0</span>
+              <span class="of">/ <span id="bitsGoal">10,000</span> Bits</span>
+              <span class="pct" id="pct">0%</span>
+            </div>
+            <div class="bar" id="bar" role="progressbar" aria-label="Community Bits contributed" aria-valuemin="0" aria-valuemax="10000" aria-valuenow="0">
+              <div class="fill" id="fill"></div>
+              <span class="tick" style="left:25%"></span><span class="tick" style="left:50%"></span><span class="tick" style="left:75%"></span>
+            </div>
+            <p class="remaining"><svg class="gem" aria-hidden="true"><use href="#gem"/></svg><span id="remText">10,000 Bits to go</span></p>
+            <button class="cta" id="cta" type="button" data-mode="contribute"><svg class="gem" aria-hidden="true"><use href="#gem"/></svg><span id="ctaLabel">Contribute Bits</span></button>
+            <p class="contrib-h">Top contributors</p>
+            <ol class="top3" id="top3"></ol>
+          </div>
+        </div>
+      </section>
+
+    </div>
+
+    <aside class="chat" aria-label="Stream chat">
+      <div class="chat-h">Stream Chat</div>
+      <div class="chat-list" id="chatList" role="log" aria-live="off"></div>
+      <form class="chat-form" id="chatForm">
+        <input type="text" id="chatInput" maxlength="200" placeholder="Send a message" aria-label="Chat message" autocomplete="off">
+        <button type="submit">Chat</button>
+      </form>
+    </aside>
+  </main>
+</div>
+
+<!-- contribute dialog -->
+<dialog class="dlg" id="contribDlg" aria-labelledby="cTitle">
+  <div class="dlg-in">
+    <div class="dlg-h">
+      <div>
+        <h3 id="cTitle">Contribute Bits</h3>
+        <p id="cSub">Unlocking the Starfall Wizard Hat</p>
+      </div>
+      <button class="x" type="button" id="cClose" aria-label="Close"><svg width="14" height="14" viewBox="0 0 14 14"><path d="M2 2l10 10M12 2L2 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button>
+    </div>
+    <div class="amts" id="amts">
+      <button class="amt" type="button" data-amt="100" aria-pressed="false"><svg class="gem" aria-hidden="true"><use href="#gem"/></svg>100</button>
+      <button class="amt" type="button" data-amt="500" aria-pressed="true"><svg class="gem" aria-hidden="true"><use href="#gem"/></svg>500</button>
+      <button class="amt" type="button" data-amt="1000" aria-pressed="false"><svg class="gem" aria-hidden="true"><use href="#gem"/></svg>1,000</button>
+      <button class="amt" type="button" data-amt="2500" aria-pressed="false"><svg class="gem" aria-hidden="true"><use href="#gem"/></svg>2,500</button>
+    </div>
+    <div class="field">
+      <label for="customAmt">Custom amount</label>
+      <input type="number" id="customAmt" min="1" step="1" inputmode="numeric" placeholder="Enter Bits">
+    </div>
+    <div class="sum">
+      <div><span>You contribute</span><b id="sumAmt">500 Bits</b></div>
+      <div><span>Community progress</span><b id="sumPct">0% to 5%</b></div>
+      <div><span>Your balance after</span><b id="sumBal">12,000 Bits</b></div>
+    </div>
+    <p class="note" id="cNote"></p>
+    <div class="dlg-actions">
+      <button class="btn" type="button" id="cCancel">Cancel</button>
+      <button class="btn primary" type="button" id="cConfirm">Confirm 500 Bits</button>
+    </div>
+  </div>
+</dialog>
+
+<!-- reward dialog -->
+<dialog class="dlg" id="rewardDlg" aria-labelledby="rTitle">
+  <div class="dlg-in">
+    <div class="dlg-h">
+      <div>
+        <h3 id="rTitle">Starfall Wizard Hat</h3>
+        <p>Epic avatar headwear, unlocked by the community.</p>
+      </div>
+      <button class="x" type="button" id="rClose" aria-label="Close"><svg width="14" height="14" viewBox="0 0 14 14"><path d="M2 2l10 10M12 2L2 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button>
+    </div>
+    <div class="reward-stage">
+      <svg viewBox="0 0 300 300" role="img" aria-label="The fully revealed Starfall Wizard Hat"><use href="#hatArt"/></svg>
+    </div>
+    <div class="equip" id="equipRow">
+      <svg viewBox="0 0 100 100" role="img" aria-label="Your avatar preview">
+        <rect width="100" height="100" fill="#1f1b2c"/>
+        <path d="M14 100 C16 78 34 70 50 70 C66 70 84 78 86 100 Z" fill="#7d4cf0"/>
+        <circle cx="50" cy="56" r="19" fill="#f0c4a0"/>
+        <circle cx="43" cy="57" r="2.2" fill="#1b1325"/><circle cx="57" cy="57" r="2.2" fill="#1b1325"/>
+        <path d="M44 65 Q50 70 56 65" fill="none" stroke="#8a4b45" stroke-width="2" stroke-linecap="round"/>
+        <g class="hat-on"><g transform="translate(12 -16) scale(0.25)"><use href="#hatArt"/></g></g>
+      </svg>
+      <div><b id="equipTitle">Your avatar</b><p id="equipText">Equip the hat to see it on your avatar.</p></div>
+    </div>
+    <div class="dlg-actions">
+      <button class="btn" type="button" id="rDone">Close</button>
+      <button class="btn gold" type="button" id="equipBtn" aria-pressed="false">Equip on my avatar</button>
+    </div>
+  </div>
+</dialog>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+(function () {
+  'use strict';
+  var GOAL = 10000;
+  var START_BALANCE = 12500;
+  var RING = 2 * Math.PI * 46;
+  var reduce = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+  var $ = function (id) { return document.getElementById(id); };
+  var fmt = function (n) { return Math.round(n).toLocaleString('en-US'); };
+  var rand = function (a, b) { return a + Math.random() * (b - a); };
+  var pick = function (a) { return a[Math.floor(Math.random() * a.length)]; };
+  var pctInt = function (bits) { return bits >= GOAL ? 100 : Math.floor((bits / GOAL) * 100); };
+
+  var E = {
+    panel: $('unlock'), pill: $('statusPill'), msg: $('msg'), now: $('bitsNow'), goal: $('bitsGoal'),
+    pct: $('pct'), fill: $('fill'), bar: $('bar'), rem: $('remText'), cta: $('cta'), ctaLabel: $('ctaLabel'),
+    stage: $('stage'), stageSvg: $('stageSvg'), mA: $('mA'), mB: $('mB'), edge: $('edge'), edgeGlow: $('edgeGlow'),
+    aura: $('aura'), hudPct: $('hudPct'), hudRing: $('hudRing'), hudMA: $('hudMA'), hudMB: $('hudMB'), hud: $('hud'), player: $('player'), top3: $('top3'),
+    balance: $('balance'), chatList: $('chatList'), toast: $('toast')
+  };
+  E.goal.textContent = fmt(GOAL);
+
+  var S = { total: 0, shown: 0, balance: START_BALANCE, contributors: {}, lastState: null, equipped: false, sim: false };
+
+  var COPY = {
+    locked: { pill: 'Locked', msg: 'Help reveal this reward. The community needs ' + fmt(GOAL) + ' Bits to unlock it.' },
+    progress: { pill: 'In progress', msg: 'The community is getting closer!' },
+    almost: { pill: 'Almost there', msg: 'Almost there! Just a little more to unlock this reward.' },
+    unlocked: { pill: 'Unlocked', msg: 'The community unlocked the Starfall Wizard Hat!' }
+  };
+
+  /* ---------- rendering ---------- */
+  var lastPct = -1;
+  function render(bits) {
+    var p = Math.min(1, Math.max(0, bits / GOAL));
+    var pi = pctInt(bits);
+    var W = 292 - 272 * p;
+    E.mA.setAttribute('y', W);
+    E.mA.setAttribute('height', 300 - W);
+    E.mB.setAttribute('y', W - 24);
+    var scan = p > 0.003 && p < 0.997;
+    E.edge.setAttribute('y', W - 13);
+    E.edgeGlow.setAttribute('y', W - 15);
+    E.edge.style.opacity = scan ? 1 : 0;
+    E.edgeGlow.style.opacity = scan ? 1 : 0;
+    E.aura.style.opacity = (0.18 + 0.5 * p).toFixed(2);
+    E.fill.style.width = (p * 100) + '%';
+    E.hudMA.setAttribute('y', W);
+    E.hudMA.setAttribute('height', 300 - W);
+    E.hudMB.setAttribute('y', W - 24);
+    E.hudRing.style.strokeDashoffset = (RING * (1 - p)).toFixed(2);
+    var shownBits = bits >= GOAL ? GOAL : Math.floor(bits);
+    E.now.textContent = fmt(shownBits);
+    E.pct.textContent = pi + '%';
+    E.hudPct.textContent = pi + '%';
+    E.bar.setAttribute('aria-valuenow', shownBits);
+    if (pi !== lastPct) {
+      lastPct = pi;
+      E.stageSvg.setAttribute('aria-label', 'Starfall Wizard Hat, ' + pi + '% revealed');
+    }
+    var st = p >= 1 ? 'unlocked' : p >= 0.8 ? 'almost' : p >= 0.1 ? 'progress' : 'locked';
+    if (st === 'unlocked') {
+      E.rem.textContent = 'Goal reached: ' + fmt(GOAL) + ' Bits contributed';
+    } else {
+      E.rem.textContent = fmt(GOAL - shownBits) + ' Bits to go';
+    }
+    if (st !== S.lastState) {
+      var prev = S.lastState;
+      S.lastState = st;
+      applyState(st, prev);
+    }
+  }
+
+  function applyState(st, prev) {
+    E.panel.setAttribute('data-state', st);
+    E.pill.textContent = COPY[st].pill;
+    E.msg.textContent = COPY[st].msg;
+    if (st === 'unlocked') {
+      E.cta.setAttribute('data-mode', 'reward');
+      E.ctaLabel.textContent = 'View Reward';
+      E.cta.querySelector('.gem').style.display = 'none';
+      E.player.classList.add('worn');
+      E.hud.classList.add('done');
+      if (prev) celebrate();
+    } else {
+      E.cta.setAttribute('data-mode', 'contribute');
+      E.ctaLabel.textContent = 'Contribute Bits';
+      E.cta.querySelector('.gem').style.display = '';
+      E.player.classList.remove('worn');
+      E.hud.classList.remove('done');
+    }
+  }
+
+  var raf = 0;
+  function animateTo(target) {
+    cancelAnimationFrame(raf);
+    var from = S.shown;
+    var delta = Math.abs(target - from);
+    if (reduce || delta < 1) { S.shown = target; render(target); return; }
+    var dur = Math.min(1500, 650 + (delta / GOAL) * 1400);
+    var t0 = performance.now();
+    function step(now) {
+      var t = Math.min(1, (now - t0) / dur);
+      var e = 1 - Math.pow(1 - t, 3);
+      S.shown = from + (target - from) * e;
+      render(S.shown);
+      if (t < 1) { raf = requestAnimationFrame(step); }
+      else { S.shown = target; render(target); }
+    }
+    raf = requestAnimationFrame(step);
+  }
+
+  function setTotal(n, notify) {
+    var old = S.total;
+    S.total = Math.min(GOAL, Math.max(0, n));
+    animateTo(S.total);
+    if (notify && S.total > old) {
+      var a = pctInt(old), b = pctInt(S.total);
+      [25, 50, 80].forEach(function (m) {
+        if (a < m && b >= m && b < 100) {
+          addNotice('Starfall Wizard Hat is ' + m + '% revealed', '');
+          reactions(m);
+        }
+      });
+    }
+  }
+
+  /* ---------- contributors ---------- */
+  function renderContributors() {
+    var rows = Object.keys(S.contributors).map(function (k) { return [k, S.contributors[k]]; })
+      .sort(function (a, b) { return b[1] - a[1]; }).slice(0, 3);
+    E.top3.innerHTML = '';
+    if (!rows.length) {
+      var li = document.createElement('li');
+      li.className = 'empty';
+      li.textContent = 'No contributions yet. Be the first.';
+      E.top3.appendChild(li);
+      return;
+    }
+    rows.forEach(function (r, i) {
+      var li = document.createElement('li');
+      var rk = document.createElement('span'); rk.className = 'rank'; rk.textContent = i + 1;
+      var nm = document.createElement('span'); nm.textContent = r[0];
+      var am = document.createElement('span'); am.className = 'amt-t';
+      am.innerHTML = '<svg class="gem" aria-hidden="true"><use href="#gem"/></svg>';
+      am.appendChild(document.createTextNode(fmt(r[1])));
+      li.appendChild(rk); li.appendChild(nm); li.appendChild(am);
+      E.top3.appendChild(li);
+    });
+  }
+  var SHARES = [['ByteBard', 0.38], ['Mika_Plays', 0.27], ['noodlecat', 0.2], ['priya_k', 0.15]];
+  function seedContributors(total) {
+    S.contributors = {};
+    if (total <= 0) { renderContributors(); return; }
+    SHARES.forEach(function (s) { S.contributors[s[0]] = Math.round(total * s[1]); });
+    renderContributors();
+  }
+
+  /* ---------- chat ---------- */
+  var VIEWERS = [
+    { n: 'ByteBard', c: '#7ee0a1', b: 'mod' }, { n: 'Mika_Plays', c: '#c79bff', b: 'sub' },
+    { n: 'noodlecat', c: '#ff9f5a' }, { n: 'priya_k', c: '#6fb7ff', b: 'sub' },
+    { n: 'Dex', c: '#f5c451' }, { n: 'Alex', c: '#ff7a90' }, { n: 'tomatoJoe', c: '#5eead4' },
+    { n: 'quietfox', c: '#f472b6', b: 'sub' }, { n: 'Rowan', c: '#9bd0ff' }, { n: 'sunnyside', c: '#ffc27a' }
+  ];
+  var IDLE = [
+    'that silhouette is giving wizard hat', 'no it is a crown, look at the curve', 'LUNA your setup looks incredible today',
+    'first community unlock I have seen, this is so cool', 'every bit shows a little more of it', 'the star pattern is coming through',
+    'I am calling it, wizard hat', 'how many bits are we at', 'chat remember to hydrate', 'this is way better than a hype train',
+    'the glow line is so satisfying to watch', 'cannot wait to put this on my avatar', 'who else is here from the last stream',
+    'W stream', 'the brim is getting clear', 'I only have a few bits but I am in'
+  ];
+  var REACT = {
+    25: ['a quarter of the way there', '25% already, nice'],
+    50: ['halfway chat, keep going', '50%!! you can see the shape now'],
+    80: ['we are so close', 'ALMOST THERE', 'one more push']
+  };
+  var UNLOCK_REACT = ['LETS GOOOO', 'WE DID IT', 'the hat is so clean', 'equipping this right now', 'thank you everyone who gave bits'];
+
+  function addLine(node) {
+    var L = E.chatList;
+    var atBottom = L.scrollHeight - L.scrollTop - L.clientHeight < 90;
+    L.appendChild(node);
+    while (L.children.length > 150) L.removeChild(L.firstChild);
+    if (atBottom) L.scrollTop = L.scrollHeight;
+  }
+  function addChat(user, text) {
+    var d = document.createElement('div');
+    d.className = 'line';
+    if (user.b) {
+      var b = document.createElement('span');
+      b.className = 'badge ' + user.b; b.textContent = user.b === 'mod' ? 'M' : 'S';
+      b.title = user.b === 'mod' ? 'Moderator' : 'Subscriber';
+      d.appendChild(b);
+    }
+    var u = document.createElement('span'); u.className = 'u'; u.style.color = user.c; u.textContent = user.n;
+    d.appendChild(u);
+    d.appendChild(document.createTextNode(': ' + text));
+    addLine(d);
+  }
+  function addCheer(name, amt, you) {
+    var d = document.createElement('div');
+    d.className = 'line cheer';
+    var g = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    g.setAttribute('class', 'gem'); g.setAttribute('aria-hidden', 'true');
+    var u = document.createElementNS('http://www.w3.org/2000/svg', 'use');
+    u.setAttribute('href', '#gem'); g.appendChild(u);
+    var nm = document.createElement('span'); nm.className = 'u'; nm.textContent = name;
+    nm.style.color = you ? '#c79bff' : (VIEWERS.filter(function (v) { return v.n === name; })[0] || { c: '#c79bff' }).c;
+    d.appendChild(g); d.appendChild(nm);
+    d.appendChild(document.createTextNode(' contributed ' + fmt(amt) + ' Bits!'));
+    addLine(d);
+  }
+  function addNotice(text, kind) {
+    var d = document.createElement('div');
+    d.className = 'line notice' + (kind ? ' ' + kind : '');
+    d.textContent = text;
+    addLine(d);
+  }
+  function reactions(key) {
+    var arr = key === 'unlock' ? UNLOCK_REACT : REACT[key];
+    arr.forEach(function (t, i) {
+      setTimeout(function () { addChat(pick(VIEWERS), t); }, 500 + i * rand(500, 1100));
+    });
+  }
+  function chatter() {
+    if (!document.hidden) addChat(pick(VIEWERS), pick(IDLE));
+    setTimeout(chatter, rand(2400, 5200));
+  }
+
+  /* ---------- effects ---------- */
+  var toastT = 0;
+  function toast(text) {
+    E.toast.textContent = text;
+    E.toast.classList.add('show');
+    clearTimeout(toastT);
+    toastT = setTimeout(function () { E.toast.classList.remove('show'); }, 3400);
+  }
+  function floatPlus(amt) {
+    if (reduce) return;
+    var s = document.createElement('span');
+    s.className = 'plus'; s.textContent = '+' + fmt(amt);
+    E.stage.appendChild(s);
+    setTimeout(function () { s.remove(); }, 1600);
+  }
+  function celebrate() {
+    E.stage.classList.remove('celebrate');
+    E.hud.classList.remove('pop');
+    void E.stage.offsetWidth;
+    E.hud.classList.add('pop');
+    setTimeout(function () { E.hud.classList.remove('pop'); }, 1600);
+    E.stage.classList.add('celebrate');
+    setTimeout(function () { E.stage.classList.remove('celebrate'); }, 1800);
+    if (!reduce) {
+      var colors = ['#ffe08a', '#f5c451', '#b48aff', '#ffffff', '#9146ff'];
+      for (var i = 0; i < 34; i++) {
+        var sp = document.createElement('span');
+        var ang = Math.random() * Math.PI * 2;
+        var dist = rand(70, 150);
+        sp.className = 'spark';
+        sp.style.setProperty('--dx', Math.cos(ang) * dist + 'px');
+        sp.style.setProperty('--dy', Math.sin(ang) * dist + 'px');
+        sp.style.setProperty('--s', rand(9, 20) + 'px');
+        sp.style.setProperty('--d', rand(0, 0.35) + 's');
+        sp.style.setProperty('--c', pick(colors));
+        E.stage.appendChild(sp);
+        (function (el) { setTimeout(function () { el.remove(); }, 2200); })(sp);
+      }
+    }
+    addNotice('Community unlock complete: Starfall Wizard Hat', 'gold');
+    reactions('unlock');
+    toast('Unlocked! The community revealed the Starfall Wizard Hat.');
+  }
+
+  /* ---------- contributing ---------- */
+  function updateBalance() { E.balance.textContent = fmt(S.balance); }
+
+  function contribute(name, amount, you) {
+    var room = GOAL - S.total;
+    var amt = Math.min(amount, room);
+    if (amt <= 0) return 0;
+    if (you) { S.balance -= amt; updateBalance(); }
+    S.contributors[name] = (S.contributors[name] || 0) + amt;
+    renderContributors();
+    addCheer(name, amt, you);
+    setTotal(S.total + amt, true);
+    floatPlus(amt);
+    if (you && S.total < GOAL) {
+      toast('You contributed ' + fmt(amt) + ' Bits. The community is at ' + pctInt(S.total) + '%.');
+    }
+    return amt;
+  }
+
+  var dlg = $('contribDlg');
+  var sel = 500;
+  function refreshModal() {
+    var room = GOAL - S.total;
+    var applied = Math.min(sel, room);
+    var before = pctInt(S.total);
+    var after = pctInt(S.total + applied);
+    $('cSub').textContent = 'Unlocking the Starfall Wizard Hat. ' + fmt(room) + ' Bits to go.';
+    $('sumAmt').textContent = fmt(applied) + ' Bits';
+    $('sumPct').textContent = before + '% to ' + after + '%';
+    $('sumBal').textContent = fmt(S.balance - (sel > S.balance ? 0 : applied)) + ' Bits';
+    var note = $('cNote');
+    note.className = 'note';
+    var ok = sel >= 1 && sel <= S.balance;
+    if (sel < 1) { note.textContent = 'Choose or enter an amount to contribute.'; }
+    else if (sel > S.balance) { note.textContent = 'You only have ' + fmt(S.balance) + ' Bits. Pick a smaller amount.'; note.className = 'note err'; }
+    else if (sel > room) { note.textContent = 'Only ' + fmt(room) + ' Bits are needed, so that is all we will use.'; }
+    else { note.textContent = ''; }
+    $('cConfirm').disabled = !ok;
+    $('cConfirm').textContent = ok ? 'Confirm ' + fmt(applied) + ' Bits' : 'Confirm';
+    Array.prototype.forEach.call($('amts').querySelectorAll('.amt'), function (b) {
+      var v = +b.getAttribute('data-amt');
+      b.disabled = v > S.balance;
+      b.setAttribute('aria-pressed', (!$('customAmt').value && v === sel) ? 'true' : 'false');
+    });
+  }
+  function openContribute() {
+    if (S.total >= GOAL) return;
+    var firstOk = [500, 100].filter(function (v) { return v <= S.balance; })[0] || 0;
+    sel = firstOk;
+    $('customAmt').value = '';
+    refreshModal();
+    dlg.showModal();
+  }
+  $('amts').addEventListener('click', function (e) {
+    var b = e.target.closest('.amt');
+    if (!b || b.disabled) return;
+    sel = +b.getAttribute('data-amt');
+    $('customAmt').value = '';
+    refreshModal();
+  });
+  $('customAmt').addEventListener('input', function () {
+    var v = Math.floor(Number(this.value));
+    sel = isFinite(v) && v > 0 ? v : 0;
+    refreshModal();
+  });
+  $('cConfirm').addEventListener('click', function () {
+    if (sel < 1 || sel > S.balance) return;
+    var amt = sel;
+    dlg.close();
+    contribute('You', amt, true);
+  });
+  $('cCancel').addEventListener('click', function () { dlg.close(); });
+  $('cClose').addEventListener('click', function () { dlg.close(); });
+  dlg.addEventListener('click', function (e) { if (e.target === dlg) dlg.close(); });
+
+  /* ---------- reward ---------- */
+  var rdlg = $('rewardDlg');
+  function refreshEquip() {
+    $('equipRow').classList.toggle('on', S.equipped);
+    $('equipBtn').setAttribute('aria-pressed', S.equipped ? 'true' : 'false');
+    $('equipBtn').textContent = S.equipped ? 'Equipped' : 'Equip on my avatar';
+    $('equipText').textContent = S.equipped ? 'The Starfall Wizard Hat is on your avatar.' : 'Equip the hat to see it on your avatar.';
+  }
+  $('equipBtn').addEventListener('click', function () { S.equipped = !S.equipped; refreshEquip(); });
+  $('rClose').addEventListener('click', function () { rdlg.close(); });
+  $('rDone').addEventListener('click', function () { rdlg.close(); });
+  rdlg.addEventListener('click', function (e) { if (e.target === rdlg) rdlg.close(); });
+
+  E.cta.addEventListener('click', function () {
+    if (S.lastState === 'unlocked') { refreshEquip(); rdlg.showModal(); }
+    else openContribute();
+  });
+
+  /* ---------- misc controls ---------- */
+  $('hud').addEventListener('click', function () {
+    E.panel.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'start' });
+  });
+  var fb = $('follow');
+  fb.addEventListener('click', function () {
+    var on = fb.getAttribute('aria-pressed') !== 'true';
+    fb.setAttribute('aria-pressed', on ? 'true' : 'false');
+    fb.textContent = on ? 'Following' : 'Follow';
+  });
+  $('chatForm').addEventListener('submit', function (e) {
+    e.preventDefault();
+    var inp = $('chatInput');
+    var t = inp.value.trim();
+    if (!t) return;
+    addChat({ n: 'You', c: '#c79bff' }, t);
+    inp.value = '';
+  });
+
+  /* ---------- prototype controls ---------- */
+  function setPreset(p) {
+    S.balance = START_BALANCE; updateBalance();
+    var total = Math.round(GOAL * p / 100);
+    setTotal(total, false);
+    seedContributors(total);
+    addNotice('Prototype: jumped to ' + p + '%', 'sys');
+  }
+  Array.prototype.forEach.call(document.querySelectorAll('.chip[data-p]'), function (b) {
+    b.addEventListener('click', function () { setPreset(+b.getAttribute('data-p')); });
+  });
+  $('reset').addEventListener('click', function () {
+    S.equipped = false;
+    setPreset(0);
+  });
+
+  var simT = 0;
+  function simTick() {
+    if (!S.sim) return;
+    if (S.total < GOAL) {
+      var v = pick(VIEWERS);
+      contribute(v.n, pick([100, 100, 200, 500, 500, 1000]), false);
+    }
+    simT = setTimeout(simTick, rand(2600, 5600));
+  }
+  $('simToggle').addEventListener('change', function () {
+    S.sim = this.checked;
+    clearTimeout(simT);
+    if (S.sim) simT = setTimeout(simTick, 1200);
+  });
+
+  /* ---------- init ---------- */
+  [
+    [VIEWERS[0], 'welcome in everyone, today the chat unlocks a new avatar hat'],
+    [VIEWERS[2], 'that silhouette looks like a wizard hat'],
+    [VIEWERS[1], 'no way, look at the pointy tip, it has to be a wizard hat'],
+    [VIEWERS[3], 'LUNA the stream looks so good today'],
+    [VIEWERS[4], 'ok how do we reveal it again'],
+    [VIEWERS[0], 'hit Contribute Bits under the stream, every bit shows more of the hat']
+  ].forEach(function (m) { addChat(m[0], m[1]); });
+  E.chatList.scrollTop = E.chatList.scrollHeight;
+  renderContributors();
+  updateBalance();
+  render(0);
+  setTimeout(chatter, 2500);
+})();
+</script>
+
+</body></html>
