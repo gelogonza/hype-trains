@@ -6,6 +6,8 @@
 hype-train-dreams/
   apps/
     hype-pass/          Angelo: Hype Train Station + Hype Pass   (port 5101)
+    battle-boss/        Ryanna: Battle Boss poll, mobile          (port 5102)
+    avatar-unlock/      Drew: community cosmetic unlock           (port 5103)
     <your-app>/         one folder per teammate concept
   packages/             shared code, only once two apps need the same thing (empty for now)
   templates/app/        starter used by `npm run new-app`
@@ -129,6 +131,7 @@ Run `npm run doctor -- <app>` first. It checks every rule below and prints a fix
 | Settings leak between apps on the shared site | Same `localStorage` key names | Prefix keys with the app name (`my-app:volume`) |
 | Uses yarn/pnpm commands in its scripts | Different package manager | Replace them with `npm run …`; the root `npm install` handles everything |
 | Several things in one zip / repo | Front end + server + docs together | Re-run with `--subdir <the front end folder>` |
+| A file sits loose in `apps/` (e.g. `apps/My_Prototype.html`) and isn't on the site | Uploaded through GitHub's "Add files via upload", so it has no app folder | Put it in a folder as `index.html`, run `npm run import-app -- <that folder> <name> --owner "You"`, then delete the loose file |
 
 Still stuck? Open the app in an AI agent and point it at `AGENTS.md`. It knows these rules and the scripts.
 
@@ -153,6 +156,7 @@ Still stuck? Open the app in an AI agent and point it at `AGENTS.md`. It knows t
 ## Team workflow
 
 - **Branches:** one branch per feature or app, e.g. `sam/boss-fight-train`, merged with a pull request. Keep changes inside your own `apps/<app>` folder. Changes to the root `package.json`, `scripts/` or `packages/` need a heads-up in the group chat.
+- **Uploading on the GitHub website:** upload into your own `apps/<app>/` folder (e.g. replace `apps/avatar-unlock/index.html`), not into `apps/` itself. A loose file there isn't an app and won't show up on the site.
 - **Before you push:** run `npm run build -w @hype/<app>`. Optionally run `npm run build` to check you didn't break the shared lockfile for others.
 - **Canvas upload:** zip your own `apps/<app>` folder (without `node_modules` or `dist`), or share the combined `site/`.
 
