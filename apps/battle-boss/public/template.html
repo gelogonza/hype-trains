@@ -1,0 +1,672 @@
+<div style="position: relative; width: 390px; height: 844px; overflow: hidden; background: #0e0e10; color: #efeff1; font-family: 'DM Sans', system-ui, sans-serif; font-size: 14px; line-height: 1.35" data-canvas-width="390" data-canvas-height="844" data-document-role="page" data-label="Battle Boss (mobile)">
+
+<!-- ============ VIEWER: STREAM SCREEN ============ -->
+<sc-if value="{{ isStream }}" hint-placeholder-val="{{ true }}">
+<div style="position: absolute; inset: 0; display: flex; flex-direction: column">
+
+  <sc-if value="{{ isPrivileged }}" hint-placeholder-val="{{ false }}">
+    <div style="flex: none; background: #ffb020; color: #1a1200; padding: 8px 16px; display: flex; justify-content: space-between; align-items: center; gap: 8px">
+      <span style="font-size: 12px; font-weight: 700">Viewing as {{roleLabel}}</span>
+      <button type="button" sc-camel-on-click="{{ openControls }}" style="min-height: 36px; padding: 0 12px; border: 0; border-radius: 8px; background: #1a1200; color: #ffb020; font-weight: 700; font-size: 12px; cursor: pointer">Open poll controls</button>
+    </div>
+  </sc-if>
+
+  <div style="position: relative; height: 196px; flex: none; background: linear-gradient(140deg, #2b1a55 0%, #173a52 100%); overflow: hidden">
+    <svg width="390" height="196" sc-camel-view-box="0 0 390 196" aria-hidden="true" style="position: absolute; inset: 0">
+      <circle cx="300" cy="60" r="86" fill="#4b2d8f" opacity="0.5"></circle>
+      <circle cx="90" cy="170" r="104" fill="#1f6f8b" opacity="0.35"></circle>
+      <path d="M0 160 L70 118 L120 146 L190 96 L260 140 L320 106 L390 146 L390 196 L0 196 Z" fill="#0e0e10" opacity="0.55"></path>
+    </svg>
+    <div style="position: absolute; top: 12px; left: 16px; display: flex; gap: 8px; align-items: center">
+      <span style="background: #e91916; color: #ffffff; font-weight: 700; font-size: 11px; letter-spacing: 0.06em; padding: 3px 8px; border-radius: 4px">LIVE</span>
+      <span style="background: rgba(14,14,16,0.75); font-size: 12px; padding: 3px 8px; border-radius: 4px">12.4K watching</span>
+    </div>
+    <button type="button" sc-camel-on-click="{{ openDemo }}" style="position: absolute; top: 6px; right: 10px; min-height: 44px; padding: 0 12px; border: 0; background: transparent; color: #efeff1; font-size: 12px; font-weight: 700; cursor: pointer; text-decoration: underline">Prototype tools</button>
+    <span style="position: absolute; bottom: 12px; left: 16px; font-size: 12px; background: rgba(14,14,16,0.75); padding: 3px 8px; border-radius: 4px">Mock stream preview</span>
+  </div>
+
+  <div style="display: flex; gap: 12px; align-items: center; padding: 12px 16px; flex: none">
+    <div style="width: 42px; height: 42px; border-radius: 21px; background: #6d3fe0; display: flex; align-items: center; justify-content: center; font-family: 'Bricolage Grotesque', system-ui, sans-serif; font-weight: 800; font-size: 18px; color: #ffffff; flex: none">N</div>
+    <div style="display: flex; flex-direction: column; min-width: 0; flex: 1">
+      <span style="font-weight: 700; font-size: 15px">NovaKitsune</span>
+      <span style="font-size: 13px; color: #adadb8">Chat decides what we play next</span>
+    </div>
+    <sc-if value="{{ isViewer }}" hint-placeholder-val="{{ true }}">
+      <button type="button" sc-camel-on-click="{{ openProfile }}" style="min-height: 44px; padding: 0 12px; border: 1px solid #4a3a86; border-radius: 22px; background: #1b1530; color: #efeff1; font-weight: 700; font-size: 13px; cursor: pointer; display: flex; align-items: center; gap: 6px; flex: none">
+        <svg width="16" height="16" sc-camel-view-box="0 0 40 40" aria-hidden="true"><polygon points="20,2 36,11 36,29 20,38 4,29 4,11" fill="#ffd23f"></polygon></svg>
+        My pins {{pinCount}}
+      </button>
+    </sc-if>
+  </div>
+
+  <div style="margin: 0 16px; padding: 10px 14px; background: #18181b; border-radius: 12px; flex: none">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 7px">
+      <span style="font-weight: 700; font-size: 13px">Hype Train - Level 3</span>
+      <span style="font-size: 12px; color: #adadb8">64% to next level</span>
+    </div>
+    <div style="height: 8px; border-radius: 4px; background: #2a2a31; overflow: hidden">
+      <div style="height: 8px; width: 64%; background: linear-gradient(90deg, #7a3ff2, #4fc9ff); border-radius: 4px"></div>
+    </div>
+  </div>
+
+  <div style="margin: 12px 16px 0 16px; padding: 14px; background: linear-gradient(135deg, #2a1d52 0%, #1b1530 100%); border: 1px solid #4a3a86; border-radius: 14px; display: flex; flex-direction: column; gap: 10px; flex: none">
+    <div style="display: flex; justify-content: space-between; align-items: center">
+      <span style="font-size: 11px; font-weight: 700; letter-spacing: 0.08em; color: #ffd23f">BATTLE BOSS - {{cardEyebrow}}</span>
+      <sc-if value="{{ pollRunning }}" hint-placeholder-val="{{ false }}">
+        <span style="font-family: 'Bricolage Grotesque', system-ui, sans-serif; font-weight: 800; font-size: 18px">{{timeText}}</span>
+      </sc-if>
+    </div>
+    <span style="font-family: 'Bricolage Grotesque', system-ui, sans-serif; font-weight: 700; font-size: 19px">{{cardTitle}}</span>
+    <span style="font-size: 13px; color: #adadb8">{{cardSub}}</span>
+    <sc-if value="{{ hasPoll }}" hint-placeholder-val="{{ false }}">
+      <div style="display: flex; height: 10px; border-radius: 5px; overflow: hidden; background: #2a2a31">
+        <div style="width: {{pctA}}%; background: #ff7a3d; transition: width 0.4s"></div>
+        <div style="width: {{pctB}}%; background: #4fc9ff; transition: width 0.4s"></div>
+      </div>
+      <button type="button" sc-camel-on-click="{{ openPoll }}" style="width: 100%; min-height: 48px; border: 0; border-radius: 10px; background: {{accent}}; color: #ffffff; font-weight: 700; font-size: 15px; cursor: pointer">{{cardButton}}</button>
+    </sc-if>
+  </div>
+
+  <div style="margin-top: 12px; border-top: 1px solid #26262c; padding: 10px 16px; display: flex; flex-direction: column; gap: 6px; overflow: hidden; flex: 1">
+    <span style="font-size: 11px; font-weight: 700; letter-spacing: 0.08em; color: #adadb8">STREAM CHAT (MOCK)</span>
+    <sc-for list="{{ chatLines }}" as="line" hint-placeholder-count="4">
+      <div style="font-size: 13px"><span style="font-weight: 700; color: {{line.color}}">{{line.name}}</span><span>: {{line.text}}</span></div>
+    </sc-for>
+  </div>
+</div>
+</sc-if>
+
+<!-- ============ VIEWER: PIN COLLECTION / PROFILE ============ -->
+<sc-if value="{{ isProfile }}" hint-placeholder-val="{{ false }}">
+<div style="position: absolute; inset: 0; display: flex; flex-direction: column; background: radial-gradient(ellipse at 50% 0%, #2a1d52 0%, #0e0e10 55%)">
+  <div style="flex: none; display: flex; align-items: center; gap: 10px; padding: 12px 16px">
+    <button type="button" aria-label="Back to stream" sc-camel-on-click="{{ backToStream }}" style="width: 44px; height: 44px; border: 0; border-radius: 22px; background: #26262c; cursor: pointer; display: flex; align-items: center; justify-content: center; flex: none">
+      <svg width="20" height="20" sc-camel-view-box="0 0 24 24" fill="none" stroke="#efeff1" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5 L8 12 L15 19"></path></svg>
+    </button>
+    <span style="font-family: 'Bricolage Grotesque', system-ui, sans-serif; font-weight: 800; font-size: 20px">My pins</span>
+  </div>
+  <div style="flex: 1; overflow-y: auto; padding: 0 16px 24px 16px; display: flex; flex-direction: column; gap: 14px">
+    <div style="display: flex; gap: 12px; align-items: center">
+      <div style="width: 52px; height: 52px; border-radius: 26px; background: #2f7d6d; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 20px; color: #ffffff; flex: none">T</div>
+      <span style="display: flex; flex-direction: column">
+        <span style="font-weight: 700; font-size: 17px">tidepool_tess</span>
+        <span style="font-size: 12px; color: #adadb8">Demo viewer account</span>
+      </span>
+    </div>
+    <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px">
+      <div style="background: #18181b; border-radius: 12px; padding: 12px; display: flex; flex-direction: column">
+        <span style="font-family: 'Bricolage Grotesque', system-ui, sans-serif; font-weight: 800; font-size: 26px">{{pinCount}}</span>
+        <span style="font-size: 12px; color: #adadb8">Pins collected</span>
+      </div>
+      <div style="background: #18181b; border-radius: 12px; padding: 12px; display: flex; flex-direction: column">
+        <span style="font-family: 'Bricolage Grotesque', system-ui, sans-serif; font-weight: 800; font-size: 26px">{{pinCount}}</span>
+        <span style="font-size: 12px; color: #adadb8">Wins on record</span>
+      </div>
+    </div>
+    <div style="padding: 12px; border-radius: 12px; border: 1px dashed #4a3a86; font-size: 12px; color: #adadb8">Twitch profile display: not connected in this prototype. Pins live in this in-app collection. Whether they can also appear on your Twitch account depends on what Twitch's integration supports.</div>
+
+    <sc-if value="{{ noPins }}" hint-placeholder-val="{{ false }}">
+      <div style="padding: 20px; border-radius: 14px; background: #18181b; text-align: center; display: flex; flex-direction: column; gap: 6px">
+        <span style="font-weight: 700">No pins yet</span>
+        <span style="font-size: 13px; color: #adadb8">Join the winning team and contribute at least {{minBitsText}} Bits in a poll to earn a winner pin.</span>
+      </div>
+    </sc-if>
+
+    <sc-for list="{{ pinList }}" as="p" hint-placeholder-count="2">
+      <div style="display: flex; gap: 14px; align-items: center; padding: 14px; border-radius: 14px; background: #18181b; opacity: {{p.opacity}}">
+        <svg width="56" height="56" sc-camel-view-box="0 0 40 40" aria-hidden="true" style="flex: none">
+          <polygon points="20,2 36,11 36,29 20,38 4,29 4,11" fill="{{p.color}}"></polygon>
+          <sc-if value="{{ p.isA }}" hint-placeholder-val="{{ true }}">
+            <polygon points="20,10 29,26 11,26" fill="#0e0e10"></polygon>
+          </sc-if>
+          <sc-if value="{{ p.isB }}" hint-placeholder-val="{{ false }}">
+            <circle cx="20" cy="20" r="8" fill="#0e0e10"></circle>
+          </sc-if>
+        </svg>
+        <span style="display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 1">
+          <span style="font-weight: 700; font-size: 15px">{{p.title}}</span>
+          <span style="font-size: 12px; color: #adadb8">{{p.detail}}</span>
+          <span style="font-size: 12px; color: #efeff1">{{p.earned}} - {{p.bitsText}}</span>
+          <sc-if value="{{ p.hasNote }}" hint-placeholder-val="{{ false }}">
+            <span style="font-size: 12px; font-weight: 700; color: #ffd36a">{{p.note}}</span>
+          </sc-if>
+        </span>
+      </div>
+    </sc-for>
+  </div>
+</div>
+</sc-if>
+
+<!-- ============ STREAMER / MODERATOR CONTROL PANEL ============ -->
+<sc-if value="{{ isControls }}" hint-placeholder-val="{{ false }}">
+<div style="position: absolute; inset: 0; display: flex; flex-direction: column; background: #14110a">
+  <div style="flex: none; background: #ffb020; color: #1a1200; padding: 10px 16px 12px 16px; display: flex; align-items: center; gap: 10px">
+    <button type="button" aria-label="Back to stream" sc-camel-on-click="{{ backToStream }}" style="width: 44px; height: 44px; border: 0; border-radius: 22px; background: #1a1200; cursor: pointer; display: flex; align-items: center; justify-content: center; flex: none">
+      <svg width="20" height="20" sc-camel-view-box="0 0 24 24" fill="none" stroke="#ffb020" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5 L8 12 L15 19"></path></svg>
+    </button>
+    <span style="display: flex; flex-direction: column; flex: 1; min-width: 0">
+      <span style="font-family: 'Bricolage Grotesque', system-ui, sans-serif; font-weight: 800; font-size: 17px">{{roleLabel}} controls</span>
+      <span style="font-size: 12px">Viewers never see this screen</span>
+    </span>
+    <button type="button" sc-camel-on-click="{{ openDemo }}" style="min-height: 44px; padding: 0 8px; border: 0; background: transparent; color: #1a1200; font-size: 12px; font-weight: 700; text-decoration: underline; cursor: pointer; flex: none">Prototype tools</button>
+  </div>
+
+  <div style="flex: 1; overflow-y: auto; padding: 14px 16px 24px 16px; display: flex; flex-direction: column; gap: 14px">
+
+    <div style="padding: 12px; border: 1px solid #5a4410; border-radius: 12px; background: #1d1807; font-size: 13px; color: #e9d9aa">{{permissionText}}</div>
+
+    <!-- status -->
+    <div style="padding: 14px; border-radius: 14px; background: #1d1807; border: 1px solid #5a4410; display: flex; flex-direction: column; gap: 10px">
+      <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px">
+        <span style="font-weight: 700; font-size: 15px">{{ctlTitle}}</span>
+        <span style="font-size: 11px; font-weight: 700; letter-spacing: 0.06em; padding: 4px 8px; border-radius: 10px; background: #ffb020; color: #1a1200; flex: none">{{phaseLabel}}</span>
+      </div>
+      <sc-if value="{{ hasPoll }}" hint-placeholder-val="{{ false }}">
+        <div style="display: flex; justify-content: space-between; align-items: baseline">
+          <span style="font-size: 12px; color: #e9d9aa">Time remaining</span>
+          <span style="font-family: 'Bricolage Grotesque', system-ui, sans-serif; font-weight: 800; font-size: 26px">{{timeText}}</span>
+        </div>
+        <sc-for list="{{ teams }}" as="t" hint-placeholder-count="2">
+          <div style="display: flex; flex-direction: column; gap: 4px">
+            <div style="display: flex; justify-content: space-between; font-size: 13px">
+              <span style="font-weight: 700; color: {{t.color}}">{{t.name}}</span>
+              <span>{{t.scoreText}} pts - {{t.pct}}%</span>
+            </div>
+            <div style="height: 8px; border-radius: 4px; background: #2e2610; overflow: hidden">
+              <div style="height: 8px; width: {{t.pct}}%; background: {{t.color}}; transition: width 0.4s"></div>
+            </div>
+            <span style="font-size: 12px; color: #d6c690">{{t.breakdown}}</span>
+          </div>
+        </sc-for>
+        <span style="font-size: 12px; color: #e9d9aa">Scores count confirmed Bits and rate-limited taps only. Failed, unconfirmed and duplicate Bits events are never counted.</span>
+      </sc-if>
+    </div>
+
+    <!-- result: decision needed -->
+    <sc-if value="{{ needsDecision }}" hint-placeholder-val="{{ false }}">
+      <div style="padding: 14px; border-radius: 14px; background: #2a1d07; border: 2px solid #ffb020; display: flex; flex-direction: column; gap: 10px">
+        <span style="font-size: 11px; font-weight: 700; letter-spacing: 0.08em; color: #ffb020">NO WINNER YET - DECISION NEEDED</span>
+        <span style="font-family: 'Bricolage Grotesque', system-ui, sans-serif; font-weight: 800; font-size: 20px">{{winText}}</span>
+        <span style="font-size: 13px; color: #e9d9aa">Viewers see a waiting state until the streamer decides. No pins are awarded yet.</span>
+        <sc-if value="{{ canDecide }}" hint-placeholder-val="{{ true }}">
+          <div style="display: flex; flex-direction: column; gap: 8px">
+            <button type="button" sc-camel-on-click="{{ declareA }}" style="min-height: 46px; border: 0; border-radius: 10px; background: #ff7a3d; color: #0e0e10; font-weight: 700; cursor: pointer">Declare {{nameA}} the winner</button>
+            <button type="button" sc-camel-on-click="{{ declareB }}" style="min-height: 46px; border: 0; border-radius: 10px; background: #4fc9ff; color: #0e0e10; font-weight: 700; cursor: pointer">Declare {{nameB}} the winner</button>
+            <button type="button" sc-camel-on-click="{{ declareNone }}" style="min-height: 46px; border: 1px solid #ffb020; border-radius: 10px; background: transparent; color: #ffb020; font-weight: 700; cursor: pointer">Declare no winner</button>
+            <sc-if value="{{ canOvertime }}" hint-placeholder-val="{{ true }}">
+              <button type="button" sc-camel-on-click="{{ runOvertime }}" style="min-height: 46px; border: 1px solid #ffb020; border-radius: 10px; background: transparent; color: #ffb020; font-weight: 700; cursor: pointer">Run a tiebreak: {{otText}} of overtime</button>
+            </sc-if>
+          </div>
+        </sc-if>
+        <sc-if value="{{ waitDecision }}" hint-placeholder-val="{{ false }}">
+          <div style="min-height: 46px; border-radius: 10px; background: #2e2610; color: #e9d9aa; font-size: 13px; display: flex; align-items: center; justify-content: center; text-align: center; padding: 0 10px">Waiting for the streamer. Moderators cannot decide results.</div>
+        </sc-if>
+        <span style="font-size: 12px; color: #e9d9aa">Tie and no-participation behavior is configurable in the Tweaks panel.</span>
+      </div>
+    </sc-if>
+
+    <!-- result: final + override -->
+    <sc-if value="{{ settledResult }}" hint-placeholder-val="{{ false }}">
+      <div style="padding: 14px; border-radius: 14px; background: #1d1807; border: 1px solid #5a4410; display: flex; flex-direction: column; gap: 10px">
+        <span style="font-size: 11px; font-weight: 700; letter-spacing: 0.08em; color: #e9d9aa">FINAL RESULT</span>
+        <span style="font-family: 'Bricolage Grotesque', system-ui, sans-serif; font-weight: 800; font-size: 20px; color: {{winColor}}">{{winText}}</span>
+        <sc-if value="{{ overridden }}" hint-placeholder-val="{{ false }}">
+          <span style="font-size: 12px; font-weight: 700; color: #ffd36a">Result overridden by the streamer. Viewers can see this.</span>
+        </sc-if>
+        <sc-if value="{{ canOverride }}" hint-placeholder-val="{{ true }}">
+          <button type="button" sc-camel-on-click="{{ openOverride }}" style="min-height: 44px; border: 1px solid #ff6b6b; border-radius: 10px; background: transparent; color: #ff8f8f; font-weight: 700; font-size: 13px; cursor: pointer">Override result (rare)</button>
+        </sc-if>
+        <sc-if value="{{ modOverrideNote }}" hint-placeholder-val="{{ false }}">
+          <span style="font-size: 12px; color: #e9d9aa">Only the streamer can override a result.</span>
+        </sc-if>
+        <sc-if value="{{ overrideOpen }}" hint-placeholder-val="{{ false }}">
+          <div style="padding: 12px; border: 1px solid #ff6b6b; border-radius: 12px; background: #2a1212; display: flex; flex-direction: column; gap: 8px">
+            <span style="font-weight: 700; font-size: 13px; color: #ffb3b3">OVERRIDE: use only when the result is wrong</span>
+            <span style="font-size: 12px; color: #f2c9c9">This is recorded in the action log and shown to viewers. Pins already awarded for this poll are revoked and re-assigned to the new result.</span>
+            <button type="button" sc-camel-on-click="{{ overrideA }}" style="min-height: 44px; border: 0; border-radius: 10px; background: #ff7a3d; color: #0e0e10; font-weight: 700; cursor: pointer">Set {{nameA}} as winner</button>
+            <button type="button" sc-camel-on-click="{{ overrideB }}" style="min-height: 44px; border: 0; border-radius: 10px; background: #4fc9ff; color: #0e0e10; font-weight: 700; cursor: pointer">Set {{nameB}} as winner</button>
+            <button type="button" sc-camel-on-click="{{ overrideNone }}" style="min-height: 44px; border: 1px solid #ff6b6b; border-radius: 10px; background: transparent; color: #ff8f8f; font-weight: 700; cursor: pointer">Set no winner</button>
+            <button type="button" sc-camel-on-click="{{ closeOverride }}" style="min-height: 44px; border: 1px solid #5a4410; border-radius: 10px; background: transparent; color: #efeff1; font-weight: 700; cursor: pointer">Keep the current result</button>
+          </div>
+        </sc-if>
+      </div>
+    </sc-if>
+
+    <!-- running poll controls -->
+    <sc-if value="{{ isRunning }}" hint-placeholder-val="{{ false }}">
+      <div style="display: flex; flex-direction: column; gap: 10px">
+        <span style="font-size: 11px; font-weight: 700; letter-spacing: 0.08em; color: #e9d9aa">MANAGE THIS POLL</span>
+        <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px">
+          <sc-if value="{{ pollLive }}" hint-placeholder-val="{{ true }}">
+            <button type="button" sc-camel-on-click="{{ pausePoll }}" style="min-height: 48px; border: 0; border-radius: 10px; background: #ffb020; color: #1a1200; font-weight: 700; font-size: 14px; cursor: pointer">Pause</button>
+          </sc-if>
+          <sc-if value="{{ pollPaused }}" hint-placeholder-val="{{ false }}">
+            <button type="button" sc-camel-on-click="{{ resumePoll }}" style="min-height: 48px; border: 0; border-radius: 10px; background: #ffb020; color: #1a1200; font-weight: 700; font-size: 14px; cursor: pointer">Resume</button>
+          </sc-if>
+          <button type="button" sc-camel-on-click="{{ restartPoll }}" style="min-height: 48px; border: 1px solid #ffb020; border-radius: 10px; background: transparent; color: #ffb020; font-weight: 700; font-size: 14px; cursor: pointer">Restart timer</button>
+          <button type="button" sc-camel-on-click="{{ startEdit }}" style="min-height: 48px; border: 1px solid #ffb020; border-radius: 10px; background: transparent; color: #ffb020; font-weight: 700; font-size: 14px; cursor: pointer">Edit choices</button>
+          <button type="button" sc-camel-on-click="{{ askCancel }}" style="min-height: 48px; border: 1px solid #ff6b6b; border-radius: 10px; background: transparent; color: #ff8f8f; font-weight: 700; font-size: 14px; cursor: pointer">Cancel poll</button>
+        </div>
+        <span style="font-size: 12px; color: #e9d9aa">Restart resets the clock. Confirmed scores and team locks stay.</span>
+
+        <sc-if value="{{ editing }}" hint-placeholder-val="{{ false }}">
+          <div style="padding: 12px; border: 1px solid #5a4410; border-radius: 12px; background: #1d1807; display: flex; flex-direction: column; gap: 10px">
+            <label for="editA" style="font-size: 12px; color: #e9d9aa">Choice A</label>
+            <input id="editA" type="text" value="{{editA}}" sc-camel-on-input="{{ setEditA }}" style="min-height: 44px; border: 1px solid #5a4410; border-radius: 8px; background: #0e0c05; color: #efeff1; padding: 0 12px; font-size: 15px">
+            <label for="editB" style="font-size: 12px; color: #e9d9aa">Choice B</label>
+            <input id="editB" type="text" value="{{editB}}" sc-camel-on-input="{{ setEditB }}" style="min-height: 44px; border: 1px solid #5a4410; border-radius: 8px; background: #0e0c05; color: #efeff1; padding: 0 12px; font-size: 15px">
+            <sc-if value="{{ editError }}" hint-placeholder-val="{{ false }}">
+              <span style="font-size: 12px; color: #ff8f8f">{{editErrorText}}</span>
+            </sc-if>
+            <div style="display: flex; gap: 10px">
+              <button type="button" sc-camel-on-click="{{ saveEdit }}" style="flex: 1; min-height: 44px; border: 0; border-radius: 10px; background: #ffb020; color: #1a1200; font-weight: 700; cursor: pointer">Save</button>
+              <button type="button" sc-camel-on-click="{{ stopEdit }}" style="flex: 1; min-height: 44px; border: 1px solid #5a4410; border-radius: 10px; background: transparent; color: #efeff1; font-weight: 700; cursor: pointer">Discard</button>
+            </div>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ confirmCancel }}" hint-placeholder-val="{{ false }}">
+          <div style="padding: 12px; border: 1px solid #ff6b6b; border-radius: 12px; background: #2a1212; display: flex; flex-direction: column; gap: 10px">
+            <span style="font-size: 13px">Cancel this poll? Viewers will see that it was cancelled, contributions stop and no pins are awarded.</span>
+            <div style="display: flex; gap: 10px">
+              <button type="button" sc-camel-on-click="{{ doCancel }}" style="flex: 1; min-height: 44px; border: 0; border-radius: 10px; background: #ff6b6b; color: #1a0505; font-weight: 700; cursor: pointer">Yes, cancel poll</button>
+              <button type="button" sc-camel-on-click="{{ keepPoll }}" style="flex: 1; min-height: 44px; border: 1px solid #5a4410; border-radius: 10px; background: transparent; color: #efeff1; font-weight: 700; cursor: pointer">Keep running</button>
+            </div>
+          </div>
+        </sc-if>
+      </div>
+    </sc-if>
+
+    <!-- next poll: queued -->
+    <sc-if value="{{ hasQueue }}" hint-placeholder-val="{{ false }}">
+      <div style="padding: 14px; border-radius: 14px; background: #1d1807; border: 1px solid #ffb020; display: flex; flex-direction: column; gap: 10px">
+        <span style="font-size: 11px; font-weight: 700; letter-spacing: 0.08em; color: #ffb020">QUEUED BY THE STREAMER</span>
+        <span style="font-family: 'Bricolage Grotesque', system-ui, sans-serif; font-weight: 700; font-size: 18px">{{queueText}}</span>
+        <sc-if value="{{ canLaunch }}" hint-placeholder-val="{{ true }}">
+          <button type="button" sc-camel-on-click="{{ launchQueue }}" style="width: 100%; min-height: 48px; border: 0; border-radius: 10px; background: #ffb020; color: #1a1200; font-weight: 700; font-size: 15px; cursor: pointer">Launch queued poll</button>
+        </sc-if>
+        <sc-if value="{{ cannotLaunch }}" hint-placeholder-val="{{ false }}">
+          <div style="min-height: 48px; border-radius: 10px; background: #2e2610; color: #e9d9aa; font-size: 13px; display: flex; align-items: center; justify-content: center; text-align: center; padding: 0 10px">{{queueBlockText}}</div>
+        </sc-if>
+        <sc-if value="{{ isStreamer }}" hint-placeholder-val="{{ true }}">
+          <button type="button" sc-camel-on-click="{{ clearQueue }}" style="min-height: 44px; border: 1px solid #5a4410; border-radius: 10px; background: transparent; color: #efeff1; font-weight: 700; font-size: 13px; cursor: pointer">Remove from queue</button>
+        </sc-if>
+        <span style="font-size: 12px; color: #e9d9aa">Polls never launch on their own. Someone has to press launch.</span>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ noQueueForMod }}" hint-placeholder-val="{{ false }}">
+      <div style="padding: 14px; border-radius: 14px; background: #1d1807; border: 1px dashed #5a4410; display: flex; flex-direction: column; gap: 6px">
+        <span style="font-weight: 700">No poll queued</span>
+        <span style="font-size: 13px; color: #e9d9aa">Moderators cannot create polls. Ask the streamer to queue one, then you can launch it here.</span>
+      </div>
+    </sc-if>
+
+    <!-- streamer: create -->
+    <sc-if value="{{ isStreamer }}" hint-placeholder-val="{{ true }}">
+      <div style="padding: 14px; border-radius: 14px; background: #1d1807; border: 1px solid #5a4410; display: flex; flex-direction: column; gap: 10px">
+        <span style="font-family: 'Bricolage Grotesque', system-ui, sans-serif; font-weight: 700; font-size: 17px">{{createTitle}}</span>
+        <label for="draftA" style="font-size: 12px; color: #e9d9aa">Choice A (orange team)</label>
+        <input id="draftA" type="text" value="{{draftA}}" sc-camel-on-input="{{ setDraftA }}" style="min-height: 44px; border: 1px solid #5a4410; border-radius: 8px; background: #0e0c05; color: #efeff1; padding: 0 12px; font-size: 15px">
+        <label for="draftB" style="font-size: 12px; color: #e9d9aa">Choice B (blue team)</label>
+        <input id="draftB" type="text" value="{{draftB}}" sc-camel-on-input="{{ setDraftB }}" style="min-height: 44px; border: 1px solid #5a4410; border-radius: 8px; background: #0e0c05; color: #efeff1; padding: 0 12px; font-size: 15px">
+        <span style="font-size: 12px; color: #e9d9aa">Suggestions</span>
+        <div style="display: flex; flex-wrap: wrap; gap: 8px">
+          <sc-for list="{{ suggestions }}" as="sg" hint-placeholder-count="3">
+            <button type="button" sc-camel-on-click="{{ sg.pick }}" style="min-height: 44px; padding: 0 12px; border: 1px solid #5a4410; border-radius: 22px; background: transparent; color: #efeff1; font-size: 13px; cursor: pointer">{{sg.label}}</button>
+          </sc-for>
+        </div>
+        <sc-if value="{{ draftError }}" hint-placeholder-val="{{ false }}">
+          <span style="font-size: 12px; color: #ff8f8f">{{draftErrorText}}</span>
+        </sc-if>
+        <sc-if value="{{ canLaunchDraft }}" hint-placeholder-val="{{ true }}">
+          <button type="button" sc-camel-on-click="{{ launchDraft }}" style="width: 100%; min-height: 50px; border: 0; border-radius: 10px; background: #ffb020; color: #1a1200; font-weight: 700; font-size: 15px; cursor: pointer">Launch poll ({{pollLenText}})</button>
+        </sc-if>
+        <sc-if value="{{ cannotLaunchDraft }}" hint-placeholder-val="{{ false }}">
+          <div style="min-height: 50px; border-radius: 10px; background: #2e2610; color: #e9d9aa; font-size: 13px; display: flex; align-items: center; justify-content: center; text-align: center; padding: 0 10px">{{launchBlockText}}</div>
+        </sc-if>
+        <button type="button" sc-camel-on-click="{{ queueDraft }}" style="min-height: 46px; border: 1px solid #ffb020; border-radius: 10px; background: transparent; color: #ffb020; font-weight: 700; font-size: 14px; cursor: pointer">Save as next poll</button>
+      </div>
+    </sc-if>
+
+    <!-- rules -->
+    <div style="padding: 14px; border-radius: 14px; background: #1d1807; border: 1px solid #5a4410; display: flex; flex-direction: column; gap: 8px">
+      <span style="font-family: 'Bricolage Grotesque', system-ui, sans-serif; font-weight: 700; font-size: 16px">Rules for this stream</span>
+      <span style="font-size: 13px">{{ruleScore}}</span>
+      <span style="font-size: 13px">{{ruleTap}}</span>
+      <span style="font-size: 13px">{{ruleTie}}</span>
+      <span style="font-size: 13px">{{ruleNone}}</span>
+      <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-top: 4px">
+        <span style="font-size: 13px">Winner pin needs at least <span style="font-weight: 700">{{minBitsText}} Bits</span> (not final)</span>
+        <sc-if value="{{ isStreamer }}" hint-placeholder-val="{{ true }}">
+          <span style="display: flex; gap: 6px; flex: none">
+            <button type="button" aria-label="Lower pin threshold by 50 Bits" sc-camel-on-click="{{ minDown }}" style="width: 44px; height: 44px; border: 1px solid #ffb020; border-radius: 22px; background: transparent; color: #ffb020; font-weight: 800; font-size: 20px; cursor: pointer">-</button>
+            <button type="button" aria-label="Raise pin threshold by 50 Bits" sc-camel-on-click="{{ minUp }}" style="width: 44px; height: 44px; border: 1px solid #ffb020; border-radius: 22px; background: transparent; color: #ffb020; font-weight: 800; font-size: 20px; cursor: pointer">+</button>
+          </span>
+        </sc-if>
+      </div>
+      <span style="font-size: 12px; color: #d6c690">Scoring ratio, tap limits and tie behavior are set in the Tweaks panel.</span>
+    </div>
+
+    <!-- log -->
+    <div style="display: flex; flex-direction: column; gap: 6px">
+      <span style="font-size: 11px; font-weight: 700; letter-spacing: 0.08em; color: #e9d9aa">ACTION LOG</span>
+      <sc-for list="{{ logItems }}" as="l" hint-placeholder-count="3">
+        <span style="font-size: 12px; color: #d6c690">{{l.text}}</span>
+      </sc-for>
+    </div>
+  </div>
+</div>
+</sc-if>
+
+<!-- ============ VIEWER: POLL POP-UP ============ -->
+<sc-if value="{{ pollOpen }}" hint-placeholder-val="{{ false }}">
+<div style="position: absolute; inset: 0; background: rgba(0,0,0,0.6); display: flex; flex-direction: column; justify-content: flex-end">
+  <div style="background: #18181b; border-radius: 22px 22px 0 0; max-height: 790px; overflow-y: auto; padding: 18px 18px 22px 18px; display: flex; flex-direction: column; gap: 14px">
+
+    <div style="display: flex; justify-content: space-between; align-items: center">
+      <span style="display: flex; flex-direction: column; gap: 2px">
+        <span style="font-size: 11px; font-weight: 700; letter-spacing: 0.08em; color: #ffd23f">BATTLE BOSS - POLL {{pollNo}}</span>
+        <span style="font-family: 'Bricolage Grotesque', system-ui, sans-serif; font-weight: 800; font-size: 20px">What are we playing next?</span>
+      </span>
+      <button type="button" aria-label="Close poll" sc-camel-on-click="{{ closePoll }}" style="width: 44px; height: 44px; border: 0; border-radius: 22px; background: #26262c; cursor: pointer; display: flex; align-items: center; justify-content: center; flex: none">
+        <svg width="18" height="18" sc-camel-view-box="0 0 24 24" fill="none" stroke="#efeff1" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M6 6 L18 18 M18 6 L6 18"></path></svg>
+      </button>
+    </div>
+
+    <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 12px; border-radius: 12px; background: {{bannerBg}}">
+      <span style="font-size: 13px; font-weight: 700; color: {{bannerColor}}">{{bannerText}}</span>
+      <span style="font-family: 'Bricolage Grotesque', system-ui, sans-serif; font-weight: 800; font-size: 24px">{{timeText}}</span>
+    </div>
+    <div style="height: 6px; border-radius: 3px; background: #2a2a31; overflow: hidden; margin-top: -6px">
+      <div style="height: 6px; width: {{timePct}}%; background: {{accent}}; transition: width 1s linear"></div>
+    </div>
+
+    <sc-if value="{{ hasNotice }}" hint-placeholder-val="{{ false }}">
+      <div style="font-size: 13px; padding: 10px 12px; border-radius: 10px; background: #3a2f0d; color: #ffd36a">{{notice}}</div>
+    </sc-if>
+
+    <sc-if value="{{ showResult }}" hint-placeholder-val="{{ false }}">
+      <div style="padding: 16px; border-radius: 14px; background: #1b1530; border: 1px solid #4a3a86; text-align: center; display: flex; flex-direction: column; gap: 6px">
+        <span style="font-size: 11px; font-weight: 700; letter-spacing: 0.08em; color: #ffd23f">POLL CLOSED - RESULT</span>
+        <span style="font-family: 'Bricolage Grotesque', system-ui, sans-serif; font-weight: 800; font-size: 28px; color: {{winColor}}">{{winText}}</span>
+        <span style="font-size: 13px; color: #efeff1">{{resultSub}}</span>
+        <sc-if value="{{ overridden }}" hint-placeholder-val="{{ false }}">
+          <span style="font-size: 12px; font-weight: 700; color: #ffd36a">Result overridden by the streamer</span>
+        </sc-if>
+        <sc-if value="{{ showViewerResult }}" hint-placeholder-val="{{ false }}">
+          <span style="font-size: 13px; color: #efeff1">{{yourResult}}</span>
+          <span style="font-size: 13px; font-weight: 700; color: #ffd23f">{{pinStatus}}</span>
+        </sc-if>
+        <sc-if value="{{ showPinButton }}" hint-placeholder-val="{{ false }}">
+          <button type="button" sc-camel-on-click="{{ openProfile }}" style="min-height: 46px; border: 0; border-radius: 10px; background: #ffd23f; color: #1a1200; font-weight: 700; font-size: 14px; cursor: pointer">View my pins</button>
+        </sc-if>
+        <span style="font-size: 12px; color: #adadb8">The streamer or a moderator launches the next poll.</span>
+      </div>
+    </sc-if>
+
+    <sc-for list="{{ teams }}" as="t" hint-placeholder-count="2">
+      <div style="border-radius: 14px; padding: 14px; background: {{t.bg}}; border: 2px solid {{t.border}}; opacity: {{t.opacity}}; display: flex; flex-direction: column; gap: 10px">
+        <div style="display: flex; align-items: center; gap: 12px">
+          <span style="width: 40px; height: 40px; border-radius: 10px; background: {{t.color}}; display: flex; align-items: center; justify-content: center; flex: none">
+            <sc-if value="{{ t.isA }}" hint-placeholder-val="{{ true }}">
+              <svg width="20" height="20" sc-camel-view-box="0 0 24 24" fill="#0e0e10" aria-hidden="true"><path d="M12 3 L22 21 L2 21 Z"></path></svg>
+            </sc-if>
+            <sc-if value="{{ t.isB }}" hint-placeholder-val="{{ false }}">
+              <svg width="20" height="20" sc-camel-view-box="0 0 24 24" fill="#0e0e10" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle></svg>
+            </sc-if>
+          </span>
+          <span style="display: flex; flex-direction: column; flex: 1; min-width: 0">
+            <span style="font-weight: 700; font-size: 17px">{{t.name}}</span>
+            <span style="font-size: 12px; color: #adadb8">Team {{t.label}}</span>
+          </span>
+          <sc-if value="{{ t.isMine }}" hint-placeholder-val="{{ false }}">
+            <span style="display: flex; align-items: center; gap: 4px; font-size: 12px; font-weight: 700; color: #0e0e10; background: {{t.color}}; padding: 5px 10px; border-radius: 12px">
+              <svg width="12" height="12" sc-camel-view-box="0 0 24 24" fill="#0e0e10" aria-hidden="true"><path d="M7 10 V7 a5 5 0 0 1 10 0 V10 H19 V22 H5 V10 Z"></path></svg>
+              Your team - locked
+            </span>
+          </sc-if>
+          <sc-if value="{{ t.isWinner }}" hint-placeholder-val="{{ false }}">
+            <span style="font-size: 12px; font-weight: 700; color: #0e0e10; background: #ffd23f; padding: 5px 10px; border-radius: 12px">Winner</span>
+          </sc-if>
+        </div>
+        <div style="display: flex; justify-content: space-between; align-items: baseline">
+          <span style="font-family: 'Bricolage Grotesque', system-ui, sans-serif; font-weight: 800; font-size: 24px">{{t.scoreText}} <span style="font-size: 13px; font-weight: 500; color: #adadb8">pts</span></span>
+          <span style="font-weight: 700; font-size: 18px; color: {{t.color}}">{{t.pct}}%</span>
+        </div>
+        <div style="height: 10px; border-radius: 5px; background: #2a2a31; overflow: hidden">
+          <div style="height: 10px; width: {{t.pct}}%; background: {{t.color}}; border-radius: 5px; transition: width 0.4s"></div>
+        </div>
+        <span style="font-size: 12px; color: #adadb8">{{t.breakdown}}</span>
+        <sc-if value="{{ t.canJoin }}" hint-placeholder-val="{{ true }}">
+          <button type="button" sc-camel-on-click="{{ t.join }}" style="width: 100%; min-height: 46px; border: 0; border-radius: 10px; background: {{t.color}}; color: #0e0e10; font-weight: 700; font-size: 15px; cursor: pointer">Join Team {{t.label}}</button>
+        </sc-if>
+        <sc-if value="{{ t.lockedOut }}" hint-placeholder-val="{{ false }}">
+          <span style="font-size: 12px; color: #adadb8">Locked. You can not switch teams during this poll.</span>
+        </sc-if>
+      </div>
+    </sc-for>
+
+    <sc-if value="{{ showPickHint }}" hint-placeholder-val="{{ true }}">
+      <div style="font-size: 13px; color: #efeff1; padding: 10px 12px; border-radius: 10px; background: #26262c">Pick a side. Your choice locks the moment you tap and can not be changed in this poll.</div>
+    </sc-if>
+    <sc-if value="{{ showStaffNote }}" hint-placeholder-val="{{ false }}">
+      <div style="font-size: 13px; padding: 10px 12px; border-radius: 10px; background: #26262c">Read-only view. {{roleLabel}} accounts manage polls from the controls screen.</div>
+    </sc-if>
+
+    <!-- scoring impact -->
+    <sc-if value="{{ showImpact }}" hint-placeholder-val="{{ true }}">
+      <div style="padding: 14px; border-radius: 14px; background: #0e0e10; border: 1px solid #2a2a31; display: flex; flex-direction: column; gap: 10px">
+        <span style="font-size: 11px; font-weight: 700; letter-spacing: 0.08em; color: #adadb8">HOW SCORING WORKS</span>
+        <div style="display: flex; flex-direction: column; gap: 5px">
+          <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px">
+            <span style="display: flex; align-items: center; gap: 8px; font-size: 13px">
+              <svg width="16" height="16" sc-camel-view-box="0 0 24 24" fill="#ffd23f" aria-hidden="true"><path d="M12 2 L21 9 L12 22 L3 9 Z"></path></svg>
+              <span style="font-weight: 700">Bits</span><span style="color: #adadb8">{{bitsRateText}}</span>
+            </span>
+            <span style="font-weight: 700; color: #ffd23f; font-size: 13px">{{impactBitsText}}</span>
+          </div>
+          <div style="height: 10px; border-radius: 5px; background: #2a2a31; overflow: hidden"><div style="height: 10px; width: 100%; background: #ffd23f; border-radius: 5px"></div></div>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 5px">
+          <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px">
+            <span style="display: flex; align-items: center; gap: 8px; font-size: 13px">
+              <svg width="16" height="16" sc-camel-view-box="0 0 24 24" fill="none" stroke="#9be08a" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="3"></circle><circle cx="12" cy="12" r="8"></circle></svg>
+              <span style="font-weight: 700">Free tap</span><span style="color: #adadb8">{{tapRateText}}</span>
+            </span>
+            <span style="font-weight: 700; color: #9be08a; font-size: 13px">{{impactTapText}}</span>
+          </div>
+          <div style="height: 10px; border-radius: 5px; background: #2a2a31; overflow: hidden"><div style="height: 10px; width: {{tapBarW}}%; background: #9be08a; border-radius: 5px"></div></div>
+        </div>
+        <span style="font-size: 12px; color: #adadb8">Bars compare your selected Bits amount with a single tap. Bits move the score far more than taps do.</span>
+      </div>
+    </sc-if>
+
+    <!-- free tap -->
+    <sc-if value="{{ showParticipate }}" hint-placeholder-val="{{ false }}">
+      <div style="padding: 14px; border-radius: 14px; background: #0e0e10; border: 1px solid #2a2a31; display: flex; flex-direction: column; gap: 10px">
+        <div style="display: flex; justify-content: space-between; align-items: baseline">
+          <span style="font-weight: 700; font-size: 15px">Tap for {{myTeamName}} (free)</span>
+          <span style="font-size: 12px; color: #adadb8">{{myTapPts}} / {{maxTap}} tap points</span>
+        </div>
+        <div style="height: 6px; border-radius: 3px; background: #2a2a31; overflow: hidden"><div style="height: 6px; width: {{tapProgPct}}%; background: #9be08a; border-radius: 3px"></div></div>
+        <sc-if value="{{ tapReady }}" hint-placeholder-val="{{ true }}">
+          <button type="button" sc-camel-on-click="{{ tap }}" style="width: 100%; min-height: 56px; border: 0; border-radius: 12px; background: {{myTeamColor}}; color: #0e0e10; font-family: 'Bricolage Grotesque', system-ui, sans-serif; font-weight: 800; font-size: 18px; cursor: pointer">Tap +{{tapPtsText}} pt</button>
+        </sc-if>
+        <sc-if value="{{ tapWait }}" hint-placeholder-val="{{ false }}">
+          <div style="width: 100%; min-height: 56px; border-radius: 12px; background: #26262c; color: #adadb8; font-weight: 700; display: flex; align-items: center; justify-content: center">Nice. One tap every {{coolText}}</div>
+        </sc-if>
+        <sc-if value="{{ tapMaxed }}" hint-placeholder-val="{{ false }}">
+          <div style="width: 100%; min-height: 56px; border-radius: 12px; background: #26262c; color: #adadb8; font-weight: 700; display: flex; align-items: center; justify-content: center; text-align: center; padding: 0 10px">Tap limit reached for this poll. Bits still count.</div>
+        </sc-if>
+      </div>
+
+      <!-- bits -->
+      <div style="display: flex; flex-direction: column; gap: 10px; padding: 14px; border-radius: 14px; background: #0e0e10; border: 1px solid #2a2a31">
+        <div style="display: flex; justify-content: space-between; align-items: baseline">
+          <span style="font-weight: 700; font-size: 15px">Contribute Bits to {{myTeamName}}</span>
+          <span style="font-size: 12px; color: #adadb8">No limit per viewer</span>
+        </div>
+        <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px">
+          <sc-for list="{{ packs }}" as="p" hint-placeholder-count="5">
+            <button type="button" sc-camel-on-click="{{ p.pick }}" style="grid-column: {{p.span}}; min-height: 46px; border-radius: 10px; background: {{p.bg}}; border: 2px solid {{p.border}}; color: #efeff1; font-weight: 700; font-size: 14px; cursor: pointer">{{p.label}}</button>
+          </sc-for>
+        </div>
+        <sc-if value="{{ showCustom }}" hint-placeholder-val="{{ false }}">
+          <div style="display: flex; flex-direction: column; gap: 6px">
+            <label for="customAmt" style="font-size: 12px; color: #adadb8">Custom amount in Bits</label>
+            <input id="customAmt" type="text" inputmode="numeric" value="{{customText}}" sc-camel-on-input="{{ setCustom }}" placeholder="Enter a whole number" style="min-height: 46px; border: 2px solid #35353d; border-radius: 10px; background: #18181b; color: #efeff1; padding: 0 12px; font-size: 16px">
+            <sc-if value="{{ customError }}" hint-placeholder-val="{{ false }}">
+              <span style="font-size: 12px; color: #ff8f8f">Enter at least 1 Bit.</span>
+            </sc-if>
+          </div>
+        </sc-if>
+        <button type="button" sc-camel-on-click="{{ openBits }}" style="width: 100%; min-height: 50px; border: 0; border-radius: 12px; background: {{accent}}; color: #ffffff; font-weight: 700; font-size: 15px; cursor: pointer">Contribute {{packLabel}} Bits (+{{impactPtsText}} pts)</button>
+        <div style="display: flex; flex-direction: column; gap: 5px">
+          <span style="font-size: 12px; color: #efeff1">Winner pin: contribute at least {{minBitsText}} Bits on the winning team. You are at {{myBitsText}}.</span>
+          <div style="height: 6px; border-radius: 3px; background: #2a2a31; overflow: hidden"><div style="height: 6px; width: {{pinPct}}%; background: #ffd23f; border-radius: 3px"></div></div>
+          <span style="font-size: 12px; color: #adadb8">The score only changes after Twitch confirms each contribution. Taps do not count toward the pin.</span>
+        </div>
+      </div>
+    </sc-if>
+    <sc-if value="{{ showClosedNote }}" hint-placeholder-val="{{ false }}">
+      <div style="font-size: 13px; color: #adadb8; text-align: center">Contributions and taps are closed. {{closedExtra}}</div>
+    </sc-if>
+
+    <sc-if value="{{ showFeed }}" hint-placeholder-val="{{ true }}">
+      <div style="display: flex; flex-direction: column; gap: 6px">
+        <span style="font-size: 11px; font-weight: 700; letter-spacing: 0.08em; color: #adadb8">CONFIRMED CONTRIBUTIONS (MOCK)</span>
+        <sc-for list="{{ feedItems }}" as="f" hint-placeholder-count="3">
+          <div style="display: flex; gap: 8px; align-items: center; font-size: 13px">
+            <span style="width: 8px; height: 8px; border-radius: 4px; background: {{f.color}}; flex: none"></span>
+            <span><span style="font-weight: 700">{{f.name}}</span> {{f.text}}</span>
+          </div>
+        </sc-for>
+      </div>
+    </sc-if>
+  </div>
+</div>
+</sc-if>
+
+<!-- ============ OVERLAY: SIGN-IN ============ -->
+<sc-if value="{{ showSignin }}" hint-placeholder-val="{{ false }}">
+<div style="position: absolute; inset: 0; background: rgba(0,0,0,0.7); display: flex; flex-direction: column; justify-content: flex-end">
+  <div style="background: #18181b; border-radius: 22px 22px 0 0; padding: 22px 20px 24px 20px; display: flex; flex-direction: column; gap: 14px">
+    <div style="display: flex; justify-content: space-between; align-items: flex-start">
+      <span style="display: flex; flex-direction: column; gap: 4px">
+        <span style="font-family: 'Bricolage Grotesque', system-ui, sans-serif; font-weight: 800; font-size: 22px">Sign in to take part</span>
+        <span style="font-size: 13px; color: #adadb8">Viewers sign in with Twitch to pick a team, tap and contribute Bits.</span>
+      </span>
+      <button type="button" aria-label="Close" sc-camel-on-click="{{ closeOverlay }}" style="width: 44px; height: 44px; border: 0; border-radius: 22px; background: #26262c; cursor: pointer; display: flex; align-items: center; justify-content: center; flex: none">
+        <svg width="18" height="18" sc-camel-view-box="0 0 24 24" fill="none" stroke="#efeff1" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M6 6 L18 18 M18 6 L6 18"></path></svg>
+      </button>
+    </div>
+    <div style="background: #0e0e10; border-radius: 12px; padding: 12px; display: flex; gap: 12px; align-items: center">
+      <div style="width: 40px; height: 40px; border-radius: 20px; background: #2f7d6d; display: flex; align-items: center; justify-content: center; font-weight: 800; color: #ffffff">T</div>
+      <span style="display: flex; flex-direction: column">
+        <span style="font-weight: 700">tidepool_tess</span>
+        <span style="font-size: 12px; color: #adadb8">Demo viewer account</span>
+      </span>
+    </div>
+    <sc-if value="{{ idleSignin }}" hint-placeholder-val="{{ true }}">
+      <button type="button" sc-camel-on-click="{{ signIn }}" style="width: 100%; min-height: 52px; border: 0; border-radius: 12px; background: {{accent}}; color: #ffffff; font-weight: 700; font-size: 16px; cursor: pointer">Continue with Twitch (simulated)</button>
+    </sc-if>
+    <sc-if value="{{ signingIn }}" hint-placeholder-val="{{ false }}">
+      <div style="width: 100%; min-height: 52px; border-radius: 12px; background: #26262c; color: #adadb8; font-weight: 700; font-size: 15px; display: flex; align-items: center; justify-content: center">Connecting...</div>
+    </sc-if>
+    <div style="text-align: center; font-size: 12px; color: #adadb8">Prototype only. No real Twitch sign-in happens here.</div>
+  </div>
+</div>
+</sc-if>
+
+<!-- ============ OVERLAY: BITS (SIMULATED NATIVE FLOW) ============ -->
+<sc-if value="{{ showBits }}" hint-placeholder-val="{{ false }}">
+<div style="position: absolute; inset: 0; background: rgba(0,0,0,0.75); display: flex; flex-direction: column; justify-content: flex-end">
+  <div style="background: #1f1f23; border-radius: 22px 22px 0 0; padding: 20px 20px 24px 20px; display: flex; flex-direction: column; gap: 14px">
+    <div style="display: flex; justify-content: space-between; align-items: flex-start">
+      <span style="display: flex; flex-direction: column; gap: 4px">
+        <span style="font-size: 11px; font-weight: 700; letter-spacing: 0.08em; color: #adadb8">STAND-IN FOR TWITCH'S NATIVE BITS FLOW</span>
+        <span style="font-family: 'Bricolage Grotesque', system-ui, sans-serif; font-weight: 800; font-size: 22px">Contribute Bits</span>
+      </span>
+      <sc-if value="{{ bitsCanClose }}" hint-placeholder-val="{{ true }}">
+        <button type="button" aria-label="Close" sc-camel-on-click="{{ closeOverlay }}" style="width: 44px; height: 44px; border: 0; border-radius: 22px; background: #2e2e34; cursor: pointer; display: flex; align-items: center; justify-content: center; flex: none">
+          <svg width="18" height="18" sc-camel-view-box="0 0 24 24" fill="none" stroke="#efeff1" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M6 6 L18 18 M18 6 L6 18"></path></svg>
+        </button>
+      </sc-if>
+    </div>
+
+    <div style="background: #0e0e10; border-radius: 12px; padding: 14px; display: flex; flex-direction: column; gap: 8px">
+      <div style="display: flex; justify-content: space-between"><span style="color: #adadb8">Team</span><span style="font-weight: 700; color: {{myTeamColor}}">{{myTeamName}}</span></div>
+      <div style="display: flex; justify-content: space-between"><span style="color: #adadb8">Amount</span><span style="font-weight: 700">{{packLabel}} Bits</span></div>
+      <div style="display: flex; justify-content: space-between"><span style="color: #adadb8">Score once confirmed</span><span style="font-weight: 700">+{{impactPtsText}} pts</span></div>
+      <div style="display: flex; justify-content: space-between"><span style="color: #adadb8">Balance</span><span style="font-weight: 700">{{balanceText}} Bits</span></div>
+    </div>
+
+    <sc-if value="{{ bitsReview }}" hint-placeholder-val="{{ true }}">
+      <sc-if value="{{ canAfford }}" hint-placeholder-val="{{ true }}">
+        <button type="button" sc-camel-on-click="{{ confirmBits }}" style="width: 100%; min-height: 52px; border: 0; border-radius: 12px; background: {{accent}}; color: #ffffff; font-weight: 700; font-size: 16px; cursor: pointer">Confirm {{packLabel}} Bits</button>
+      </sc-if>
+      <sc-if value="{{ cannotAfford }}" hint-placeholder-val="{{ false }}">
+        <div style="font-size: 13px; color: #ff8f8f">{{affordMsg}}</div>
+        <button type="button" sc-camel-on-click="{{ addBits }}" style="width: 100%; min-height: 50px; border: 1px solid #4a3a86; border-radius: 12px; background: transparent; color: #efeff1; font-weight: 700; font-size: 15px; cursor: pointer">Add 5,000 Bits (simulated)</button>
+      </sc-if>
+      <div style="font-size: 12px; color: #adadb8; text-align: center">The score does not change until the contribution is confirmed.</div>
+    </sc-if>
+
+    <sc-if value="{{ bitsPending }}" hint-placeholder-val="{{ false }}">
+      <div style="min-height: 52px; border-radius: 12px; background: #2e2e34; display: flex; align-items: center; justify-content: center; gap: 10px; font-weight: 700">
+        <svg width="20" height="20" sc-camel-view-box="0 0 24 24" fill="none" stroke="#efeff1" stroke-width="3" stroke-linecap="round" aria-hidden="true"><path d="M12 3 a9 9 0 1 0 9 9" opacity="0.8"></path></svg>
+        Waiting for confirmation...
+      </div>
+      <div style="font-size: 12px; color: #adadb8; text-align: center">Not counted yet. Keep this open.</div>
+    </sc-if>
+
+    <sc-if value="{{ bitsOk }}" hint-placeholder-val="{{ false }}">
+      <div style="padding: 12px; border-radius: 12px; background: #12301f; color: #8be5ae; font-weight: 700; text-align: center">Confirmed. Your Bits are now in the score.</div>
+      <button type="button" sc-camel-on-click="{{ closeOverlay }}" style="width: 100%; min-height: 50px; border: 0; border-radius: 12px; background: {{accent}}; color: #ffffff; font-weight: 700; font-size: 16px; cursor: pointer">Back to poll</button>
+    </sc-if>
+
+    <sc-if value="{{ bitsFail }}" hint-placeholder-val="{{ false }}">
+      <div style="padding: 12px; border-radius: 12px; background: #3a1616; color: #ffb3b3; font-size: 13px">{{bitsMsg}}</div>
+      <div style="display: flex; gap: 10px">
+        <button type="button" sc-camel-on-click="{{ retryBits }}" style="flex: 1; min-height: 50px; border: 0; border-radius: 12px; background: {{accent}}; color: #ffffff; font-weight: 700; cursor: pointer">Try again</button>
+        <button type="button" sc-camel-on-click="{{ closeOverlay }}" style="flex: 1; min-height: 50px; border: 1px solid #4a3a86; border-radius: 12px; background: transparent; color: #efeff1; font-weight: 700; cursor: pointer">Close</button>
+      </div>
+    </sc-if>
+  </div>
+</div>
+</sc-if>
+
+<!-- ============ OVERLAY: PROTOTYPE TOOLS ============ -->
+<sc-if value="{{ showDemo }}" hint-placeholder-val="{{ false }}">
+<div style="position: absolute; inset: 0; background: rgba(0,0,0,0.7); display: flex; flex-direction: column; justify-content: flex-end">
+  <div style="background: #f4f1ea; color: #1b1a17; border-radius: 22px 22px 0 0; max-height: 800px; overflow-y: auto; padding: 18px 20px 22px 20px; display: flex; flex-direction: column; gap: 10px">
+    <div style="display: flex; justify-content: space-between; align-items: center">
+      <span style="font-family: 'Bricolage Grotesque', system-ui, sans-serif; font-weight: 800; font-size: 20px">Prototype tools</span>
+      <button type="button" aria-label="Close" sc-camel-on-click="{{ closeOverlay }}" style="width: 44px; height: 44px; border: 0; border-radius: 22px; background: #dcd7cb; cursor: pointer; display: flex; align-items: center; justify-content: center">
+        <svg width="18" height="18" sc-camel-view-box="0 0 24 24" fill="none" stroke="#1b1a17" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M6 6 L18 18 M18 6 L6 18"></path></svg>
+      </button>
+    </div>
+    <span style="font-size: 13px; color: #4a463d">Review aids only. These are not part of the product.</span>
+    <span style="font-size: 12px; font-weight: 700; letter-spacing: 0.06em">VIEW AS</span>
+    <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px">
+      <button type="button" sc-camel-on-click="{{ asViewer }}" style="min-height: 46px; border-radius: 10px; border: 2px solid {{roleBorderViewer}}; background: {{roleBgViewer}}; color: {{roleFgViewer}}; font-weight: 700; cursor: pointer">Viewer</button>
+      <button type="button" sc-camel-on-click="{{ asMod }}" style="min-height: 46px; border-radius: 10px; border: 2px solid {{roleBorderMod}}; background: {{roleBgMod}}; color: {{roleFgMod}}; font-weight: 700; cursor: pointer">Moderator</button>
+      <button type="button" sc-camel-on-click="{{ asStreamer }}" style="min-height: 46px; border-radius: 10px; border: 2px solid {{roleBorderStreamer}}; background: {{roleBgStreamer}}; color: {{roleFgStreamer}}; font-weight: 700; cursor: pointer">Streamer</button>
+    </div>
+    <span style="font-size: 12px; font-weight: 700; letter-spacing: 0.06em">POLL SHORTCUTS</span>
+    <button type="button" sc-camel-on-click="{{ quickStart }}" style="min-height: 46px; border-radius: 10px; border: 1px solid #1b1a17; background: transparent; color: #1b1a17; font-weight: 700; cursor: pointer; text-align: left; padding: 0 12px">Start example poll: Call of Duty vs Fortnite</button>
+    <button type="button" sc-camel-on-click="{{ skipAhead }}" style="min-height: 46px; border-radius: 10px; border: 1px solid #1b1a17; background: transparent; color: #1b1a17; font-weight: 700; cursor: pointer; text-align: left; padding: 0 12px">Skip to the last 10 seconds</button>
+    <button type="button" sc-camel-on-click="{{ endTie }}" style="min-height: 46px; border-radius: 10px; border: 1px solid #1b1a17; background: transparent; color: #1b1a17; font-weight: 700; cursor: pointer; text-align: left; padding: 0 12px">End the poll now as a tie</button>
+    <button type="button" sc-camel-on-click="{{ endNone }}" style="min-height: 46px; border-radius: 10px; border: 1px solid #1b1a17; background: transparent; color: #1b1a17; font-weight: 700; cursor: pointer; text-align: left; padding: 0 12px">End the poll now with no participation</button>
+    <span style="font-size: 12px; font-weight: 700; letter-spacing: 0.06em">SIMULATION</span>
+    <button type="button" sc-camel-on-click="{{ toggleSilent }}" style="min-height: 46px; border-radius: 10px; border: 1px solid #1b1a17; background: transparent; color: #1b1a17; font-weight: 700; cursor: pointer; text-align: left; padding: 0 12px">Mock viewers: {{silentLabel}}</button>
+    <button type="button" sc-camel-on-click="{{ toggleFail }}" style="min-height: 46px; border-radius: 10px; border: 1px solid #1b1a17; background: transparent; color: #1b1a17; font-weight: 700; cursor: pointer; text-align: left; padding: 0 12px">Next Bits contribution fails: {{failLabel}}</button>
+    <button type="button" sc-camel-on-click="{{ sendDuplicate }}" style="min-height: 46px; border-radius: 10px; border: 1px solid #1b1a17; background: transparent; color: #1b1a17; font-weight: 700; cursor: pointer; text-align: left; padding: 0 12px">Replay your last Bits confirmation (duplicate)</button>
+    <button type="button" sc-camel-on-click="{{ seedPins }}" style="min-height: 46px; border-radius: 10px; border: 1px solid #1b1a17; background: transparent; color: #1b1a17; font-weight: 700; cursor: pointer; text-align: left; padding: 0 12px">Add two sample pins from earlier streams</button>
+    <button type="button" sc-camel-on-click="{{ resetAll }}" style="min-height: 46px; border-radius: 10px; border: 1px solid #1b1a17; background: transparent; color: #1b1a17; font-weight: 700; cursor: pointer; text-align: left; padding: 0 12px">Reset prototype</button>
+  </div>
+</div>
+</sc-if>
+
+</div>

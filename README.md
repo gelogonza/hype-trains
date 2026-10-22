@@ -140,7 +140,8 @@ Still stuck? Open the app in an AI agent and point it at `AGENTS.md`. It knows t
   | App | Dev | Preview |
   | --- | --- | --- |
   | hype-pass | 5101 | 4101 |
-  | *(next app)* | 5102 | 4102 |
+  | battle-boss | 5102 | 4102 |
+  | *(next app)* | 5103 | 4103 |
 
 - **Build output:** each app builds to its own folder (`dist/`, or `build/` / `out/` for Create React App / Next.js, set as `hype.out`). `npm run build:site` builds them **one at a time**, each with its own base path (`/hype-pass/`, `/boss-fight-train/`…). If one app fails to build, the others still get published.
 - **Styles:** CSS Modules scope class names per app. Keep global CSS (tokens, resets) inside your own app.
