@@ -62,6 +62,44 @@ for (const dir of readdirSync(join(root, 'apps')).sort()) {
   built.push({ dir, name: pkg.name, description: pkg.description ?? '' })
 }
 
+// Add a floating "Prototypes" switcher to each built app's index.html so you can jump between
+// apps without going back to the hub. It lives in a Shadow DOM, so app CSS can't touch it (or vice versa),
+// and only the copy in site/ changes. Each app's own dist/ stays as it was.
+const links = [
+  { dir: '', label: 'All prototypes', href: siteBase },
+  ...built.map((a) => ({ dir: a.dir, label: a.dir, href: a.href ?? `${siteBase}${a.dir}/`, external: !!a.href })),
+]
+for (const a of built) {
+  if (a.href) continue
+  const indexPath = join(out, a.dir, 'index.html')
+  if (!existsSync(indexPath)) continue
+  const html = readFileSync(indexPath, 'utf8')
+  const tag = `<script>${switcherScript(links, a.dir)}</script>`
+  const at = html.toLowerCase().lastIndexOf('</body>')
+  writeFileSync(indexPath, at === -1 ? html + tag : html.slice(0, at) + tag + html.slice(at))
+}
+
+function switcherScript(links, current) {
+  // Escape "<" so a label can never close the <script> tag early.
+  const data = JSON.stringify({ links, current }).replace(/</g, '\\u003c')
+  return `(function(){var d=${data};if(document.querySelector('hype-site-switcher'))return;
+var host=document.createElement('hype-site-switcher');var r=host.attachShadow({mode:'open'});
+r.innerHTML='<style>:host{all:initial;position:fixed;right:max(12px,env(safe-area-inset-right));bottom:max(12px,env(safe-area-inset-bottom));z-index:2147483647;font:500 13px/1.3 Inter,system-ui,sans-serif}'
++'button{all:unset;cursor:pointer;padding:8px 12px;border-radius:999px;background:#1f1f23e6;color:#efeff1;border:1px solid #9147ff;box-shadow:0 2px 10px #0008}'
++'button:focus-visible,a:focus-visible{outline:2px solid #bf94ff;outline-offset:2px}'
++'nav{display:none;position:absolute;right:0;bottom:calc(100% + 8px);min-width:180px;padding:6px;border-radius:10px;background:#1f1f23;border:1px solid #2f2f35;box-shadow:0 4px 18px #000a}'
++':host([open]) nav{display:block}a{display:block;padding:8px 10px;border-radius:6px;color:#efeff1;text-decoration:none}'
++'a:hover{background:#2f2f35}a[aria-current]{color:#bf94ff;font-weight:700}</style><nav aria-label="Prototypes"></nav><button type="button" aria-expanded="false">\\u2630 Prototypes</button>';
+var nav=r.querySelector('nav'),btn=r.querySelector('button');
+d.links.forEach(function(l){var a=document.createElement('a');a.href=l.href;a.textContent=l.label+(l.external?' \\u2197':'');
+if(l.external){a.target='_blank';a.rel='noopener'}if(l.dir===d.current)a.setAttribute('aria-current','page');nav.appendChild(a)});
+function set(o){o?host.setAttribute('open',''):host.removeAttribute('open');btn.setAttribute('aria-expanded',String(o))}
+btn.addEventListener('click',function(e){e.stopPropagation();set(!host.hasAttribute('open'))});
+document.addEventListener('click',function(e){if(!e.composedPath().includes(host))set(false)});
+document.addEventListener('keydown',function(e){if(e.key==='Escape')set(false)});
+document.body.appendChild(host)})();`
+}
+
 const esc = (s) => s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c])
 writeFileSync(
   join(out, 'index.html'),

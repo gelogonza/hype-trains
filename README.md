@@ -162,5 +162,5 @@ Still stuck? Open the app in an AI agent and point it at `AGENTS.md`. It knows t
 
 ## Deploying (optional)
 
-- **One site for everything (GitHub Pages, Netlify, etc.):** run `npm run build:site` and publish `site/`. The root page links to every prototype.
+- **One site for everything (GitHub Pages, Netlify, etc.):** run `npm run build:site` and publish `site/`. The root page links to every prototype, and every app gets a floating **☰ Prototypes** button (bottom-right) for jumping straight to another app or back to the hub. It's added only to the copies in `site/`, so `npm run dev` and each app's own `dist/` are unchanged.
 - **One deployment per app (e.g. Vercel):** create a project per app with **Root Directory** set to `apps/<app>`, install command `npm install` (run from the repo root by the platform), and build command `npm run build`.
