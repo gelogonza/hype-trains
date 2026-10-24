@@ -8,6 +8,7 @@ hype-train-dreams/
     hype-pass/          Angelo: Hype Train Station + Hype Pass   (port 5101)
     battle-boss/        Ryanna: Battle Boss poll, mobile          (port 5102)
     avatar-unlock/      Drew: community cosmetic unlock           (port 5103)
+    community-reward-run/  Drew: multi-level community reward run (port 5104)
     <your-app>/         one folder per teammate concept
   packages/             shared code, only once two apps need the same thing (empty for now)
   templates/app/        starter used by `npm run new-app`
@@ -145,7 +146,8 @@ Still stuck? Open the app in an AI agent and point it at `AGENTS.md`. It knows t
   | hype-pass | 5101 | 4101 |
   | battle-boss | 5102 | 4102 |
   | avatar-unlock | 5103 | 4103 |
-  | *(next app)* | 5104 | 4104 |
+  | community-reward-run | 5104 | 4104 |
+  | *(next app)* | 5105 | 4105 |
 
 - **Build output:** each app builds to its own folder (`dist/`, or `build/` / `out/` for Create React App / Next.js, set as `hype.out`). `npm run build:site` builds them **one at a time**, each with its own base path (`/hype-pass/`, `/boss-fight-train/`…). If one app fails to build, the others still get published.
 - **Styles:** CSS Modules scope class names per app. Keep global CSS (tokens, resets) inside your own app.
