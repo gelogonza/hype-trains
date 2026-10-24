@@ -1,0 +1,1656 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Community Reward Run</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500..800&family=Figtree:wght@400;500;600;700;800&display=swap">
+<style>
+  /* Layout: Twitch-style watch page. Left column holds the stream, channel info and the unlock panel (the focus). Right column is chat. A dashed prototype strip sits above for jumping between progress states. Dark by design, so one theme. */
+  :root {
+    --bg: #0f0d15;
+    --surface: #171421;
+    --surface-2: #1f1b2c;
+    --line: #2d2840;
+    --fg: #f2f0f7;
+    --muted: #a8a2bd;
+    --accent: #9146ff;
+    --accent-hi: #b48aff;
+    --accent-lo: #5b2bc7;
+    --gold: #f5c451;
+    --gold-lo: #e59a1f;
+    --live: #ff4d4f;
+    --warn: #ff8a8c;
+    --font-display: "Bricolage Grotesque", "Trebuchet MS", system-ui, sans-serif;
+    --font-body: "Figtree", system-ui, -apple-system, "Segoe UI", sans-serif;
+    color-scheme: dark;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--fg);
+    font-family: var(--font-body);
+    font-size: 14px;
+    line-height: 1.45;
+  }
+  button { font-family: inherit; color: inherit; cursor: pointer; }
+  button:focus-visible, input:focus-visible, a:focus-visible {
+    outline: 3px solid var(--accent-hi);
+    outline-offset: 2px;
+  }
+  .inner {
+    max-width: 1560px;
+    margin: 0 auto;
+    padding-left: max(16px, env(safe-area-inset-left, 0px));
+    padding-right: max(16px, env(safe-area-inset-right, 0px));
+  }
+  .gem { width: 1em; height: 1em; flex: none; display: inline-block; vertical-align: -0.14em; }
+
+  /* top bar */
+  .topbar { background: var(--surface); border-bottom: 1px solid var(--line); }
+  .topbar .inner { display: flex; align-items: center; gap: 20px; min-height: 52px; padding-block: 8px; }
+  .logo { width: 30px; height: 30px; border-radius: 8px; background: var(--accent); display: grid; place-items: center; flex: none; }
+  .nav { display: flex; gap: 18px; font-weight: 600; color: var(--muted); }
+  .nav span:first-child { color: var(--fg); }
+  .spacer { flex: 1; }
+  .balance { display: inline-flex; align-items: center; gap: 6px; background: var(--surface-2); border: 1px solid var(--line); border-radius: 999px; padding: 5px 12px; font-weight: 700; font-variant-numeric: tabular-nums; }
+  .balance .gem { color: var(--accent-hi); font-size: 15px; }
+  .me { width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, #5b2bc7, #b48aff); display: grid; place-items: center; font-weight: 800; flex: none; }
+
+  /* prototype strip */
+  .dev { background: #120f1b; border-bottom: 1px dashed var(--line); }
+  .dev .inner { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 10px; padding-block: 9px; }
+  .dev-label { font-size: 11px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); margin-right: 4px; }
+  .chip { border: 1px solid var(--line); background: var(--surface-2); border-radius: 999px; padding: 5px 12px; font-weight: 600; font-size: 13px; font-variant-numeric: tabular-nums; transition: border-color 0.15s, background 0.15s; }
+  .chip:hover { border-color: var(--accent); background: #2a2340; }
+  .chip.reset { border-style: dashed; }
+  .toggle { display: inline-flex; align-items: center; gap: 8px; font-weight: 600; font-size: 13px; color: var(--muted); margin-left: auto; cursor: pointer; }
+  .toggle input { width: 16px; height: 16px; accent-color: var(--accent); }
+
+  /* layout */
+  .layout { display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 16px; padding-block: 16px 32px; align-items: start; }
+  .main-col { display: grid; gap: 16px; min-width: 0; }
+
+  /* player */
+  .player { position: relative; border-radius: 12px; overflow: hidden; aspect-ratio: 16 / 9; max-width: 100%; background: #000; border: 1px solid var(--line); }
+  .player > svg { width: 100%; height: 100%; display: block; }
+  .pill { position: absolute; top: 12px; display: inline-flex; align-items: center; gap: 6px; border-radius: 6px; padding: 3px 8px; font-size: 12px; font-weight: 700; }
+  .pill.live { left: 12px; background: var(--live); color: #fff; letter-spacing: 0.06em; text-transform: uppercase; }
+  .pill.views { left: 70px; background: rgba(15, 13, 21, 0.72); }
+  .bob { animation: bob 3.4s ease-in-out infinite; }
+
+  /* channel info */
+  .info { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+  .ch-avatar { width: 58px; height: 58px; border-radius: 50%; flex: none; display: grid; place-items: center; font: 800 24px var(--font-display); background: linear-gradient(135deg, #7d4cf0, #f5c451); border: 3px solid var(--accent); }
+  .ch-text { flex: 1; min-width: 220px; }
+  .ch-name { display: flex; align-items: center; gap: 6px; font: 700 18px var(--font-display); }
+  .ch-title { color: var(--fg); font-weight: 500; }
+  .ch-meta { color: var(--muted); font-size: 13px; display: flex; flex-wrap: wrap; gap: 4px 12px; margin-top: 2px; }
+  .ch-meta .cat { color: var(--accent-hi); font-weight: 700; }
+  .follow { background: var(--surface-2); border: 1px solid var(--line); border-radius: 8px; padding: 8px 16px; font-weight: 700; transition: background 0.15s, border-color 0.15s; }
+  .follow:hover { border-color: var(--accent); }
+  .follow[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: #fff; }
+
+  /* unlock panel */
+  .unlock { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 22px; transition: border-color 0.4s, box-shadow 0.4s; }
+  .unlock[data-state="almost"] { border-color: #7a4de0; box-shadow: 0 0 0 1px rgba(145, 70, 255, 0.35), 0 0 38px rgba(145, 70, 255, 0.22); }
+  .unlock[data-state="complete"] { border-color: rgba(245, 196, 81, 0.75); box-shadow: 0 0 0 1px rgba(245, 196, 81, 0.35), 0 0 46px rgba(245, 196, 81, 0.18); }
+  .u-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; flex-wrap: wrap; }
+  .eyebrow { margin: 0 0 4px; font-size: 11px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--accent-hi); }
+  .u-head h2 { margin: 0; font: 700 28px/1.1 var(--font-display); text-wrap: balance; }
+  .u-sub { margin: 6px 0 0; color: var(--muted); }
+  .status { border-radius: 999px; padding: 6px 14px; font-weight: 700; font-size: 13px; border: 1px solid var(--line); background: var(--surface-2); color: var(--muted); transition: all 0.3s; white-space: nowrap; }
+  .unlock[data-state="progress"] .status { color: var(--accent-hi); border-color: rgba(180, 138, 255, 0.5); }
+  .unlock[data-state="almost"] .status { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .unlock[data-state="complete"] .status { background: var(--gold); border-color: var(--gold); color: #2a1a00; }
+
+  .u-body { display: grid; grid-template-columns: minmax(0, 340px) minmax(0, 1fr); gap: 28px; margin-top: 18px; align-items: center; }
+  .stage { position: relative; aspect-ratio: 1; max-width: 100%; border-radius: 14px; overflow: hidden; background: radial-gradient(circle at 50% 42%, #302656 0%, #1a1429 62%, #130f1e 100%); border: 1px solid var(--line); transition: border-color 0.4s; }
+  .stage > svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+  .unlock[data-state="almost"] .stage { animation: stagePulse 1.9s ease-in-out infinite; }
+  .unlock[data-state="complete"] .stage { border-color: rgba(245, 196, 81, 0.7); }
+  .stage.celebrate::after { content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; background: radial-gradient(circle at 50% 45%, rgba(255, 224, 138, 0.55), transparent 62%); animation: flash 1.6s ease-out forwards; }
+  .badge-unlocked { position: absolute; left: 50%; bottom: 14px; transform: translate(-50%, 14px); opacity: 0; background: linear-gradient(180deg, #ffe08a, var(--gold-lo)); color: #2a1a00; font: 800 15px var(--font-display); letter-spacing: 0.02em; padding: 6px 16px; border-radius: 999px; transition: opacity 0.4s, transform 0.5s cubic-bezier(0.2, 1.4, 0.4, 1); pointer-events: none; }
+  .stage.badge-on .badge-unlocked { opacity: 1; transform: translate(-50%, 0); }
+  .spark { position: absolute; left: 50%; top: 46%; width: var(--s); height: var(--s); background: var(--c); opacity: 0; pointer-events: none; clip-path: polygon(50% 0, 62% 38%, 100% 50%, 62% 62%, 50% 100%, 38% 62%, 0 50%, 38% 38%); animation: spark 1.6s ease-out forwards; animation-delay: var(--d); }
+  .plus { position: absolute; left: 50%; top: 34%; font: 800 26px var(--font-display); color: var(--accent-hi); text-shadow: 0 2px 14px rgba(145, 70, 255, 0.8); pointer-events: none; animation: floatUp 1.5s ease-out forwards; }
+
+  .u-info { display: grid; gap: 14px; min-width: 0; }
+  .msg { margin: 0; font: 600 19px/1.3 var(--font-display); text-wrap: balance; min-height: 2.6em; display: flex; align-items: center; }
+  .numbers { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+  .big { font: 800 42px/1 var(--font-body); font-variant-numeric: tabular-nums; letter-spacing: -0.01em; }
+  .of { color: var(--muted); font-size: 16px; font-weight: 600; font-variant-numeric: tabular-nums; }
+  .pct { margin-left: auto; font: 800 24px var(--font-body); color: var(--accent-hi); font-variant-numeric: tabular-nums; }
+  .unlock[data-state="complete"] .pct { color: var(--gold); }
+  .bar { position: relative; height: 16px; border-radius: 999px; background: #0c0a12; border: 1px solid var(--line); overflow: hidden; }
+  .fill { position: absolute; inset: 0 auto 0 0; width: 0; border-radius: 999px; background: linear-gradient(90deg, var(--accent-lo), var(--accent)); box-shadow: 0 0 14px rgba(145, 70, 255, 0.6); overflow: hidden; }
+  .fill::after { content: ""; position: absolute; inset: 0; background: linear-gradient(100deg, transparent 30%, rgba(255, 255, 255, 0.35) 50%, transparent 70%); transform: translateX(-100%); }
+  .unlock[data-state="almost"] .fill::after { animation: shimmer 1.6s linear infinite; }
+  .unlock[data-state="complete"] .fill { background: linear-gradient(90deg, var(--gold-lo), #ffe08a); box-shadow: 0 0 14px rgba(245, 196, 81, 0.6); }
+  .tick { position: absolute; top: 0; bottom: 0; width: 2px; background: rgba(255, 255, 255, 0.2); }
+  .remaining { margin: 0; display: flex; align-items: center; gap: 7px; font-weight: 700; font-size: 15px; color: var(--fg); }
+  .remaining .gem { color: var(--accent-hi); font-size: 17px; }
+  .unlock[data-state="complete"] .remaining .gem { color: var(--gold); }
+  .cta { display: flex; align-items: center; justify-content: center; gap: 9px; width: 100%; padding: 15px 18px; border: 0; border-radius: 10px; background: var(--accent); color: #fff; font-weight: 800; font-size: 17px; box-shadow: 0 6px 22px rgba(145, 70, 255, 0.38); transition: background 0.15s, transform 0.1s, box-shadow 0.2s; }
+  .cta:hover:not(:disabled) { background: #a566ff; box-shadow: 0 8px 28px rgba(145, 70, 255, 0.5); }
+  .cta:active:not(:disabled) { transform: translateY(1px); }
+  .cta:disabled { opacity: 0.55; cursor: default; }
+  .cta .gem { font-size: 19px; }
+  .cta[data-mode="reward"] { background: linear-gradient(180deg, #ffe08a, var(--gold-lo)); color: #2a1a00; box-shadow: 0 6px 24px rgba(245, 196, 81, 0.35); }
+  .cta[data-mode="reward"]:hover:not(:disabled) { background: linear-gradient(180deg, #fff0b8, #f2ac3a); }
+  .contrib-h { margin: 4px 0 0; font-size: 11px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
+  .top3 { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+  .top3 li { display: flex; align-items: center; gap: 10px; font-weight: 600; }
+  .top3 .rank { width: 22px; height: 22px; border-radius: 6px; background: var(--surface-2); border: 1px solid var(--line); display: grid; place-items: center; font-size: 12px; font-weight: 800; color: var(--accent-hi); }
+  .top3 .amt-t { margin-left: auto; font-variant-numeric: tabular-nums; color: var(--muted); display: inline-flex; align-items: center; gap: 4px; }
+  .top3 .empty { color: var(--muted); font-weight: 500; }
+
+  /* chat */
+  .chat { position: sticky; top: 12px; height: calc(100dvh - 24px); min-height: 520px; display: flex; flex-direction: column; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
+  .chat-h { padding: 12px 14px; text-align: center; font-weight: 700; border-bottom: 1px solid var(--line); }
+  .chat-list { flex: 1; min-height: 0; overflow-y: auto; padding: 8px 12px; }
+  .line { padding: 3px 0; font-size: 13.5px; line-height: 1.5; overflow-wrap: anywhere; }
+  .line .u { font-weight: 700; }
+  .badge { display: inline-grid; place-items: center; width: 16px; height: 16px; border-radius: 3px; margin-right: 5px; vertical-align: 1px; font-size: 10px; font-weight: 800; color: #0f0d15; }
+  .badge.mod { background: #3ddc97; }
+  .badge.sub { background: var(--accent-hi); }
+  .line.cheer, .line.notice { margin: 5px -4px; padding: 7px 10px; border-radius: 6px; border-left: 3px solid var(--accent); background: rgba(145, 70, 255, 0.14); }
+  .line.cheer .gem { color: var(--accent-hi); font-size: 14px; margin-right: 4px; }
+  .line.notice { font-weight: 700; }
+  .line.notice.gold { border-left-color: var(--gold); background: rgba(245, 196, 81, 0.14); }
+  .line.notice.sys { border-left-color: var(--line); background: var(--surface-2); color: var(--muted); font-weight: 500; }
+  .chat-form { display: flex; gap: 8px; padding: 10px 12px; border-top: 1px solid var(--line); }
+  .chat-form input { flex: 1; min-width: 0; background: #0e0c14; color: var(--fg); border: 1px solid var(--line); border-radius: 8px; padding: 9px 12px; font: inherit; }
+  .chat-form input::placeholder { color: #7f799a; }
+  .chat-form button { background: var(--accent); border: 0; border-radius: 8px; padding: 0 16px; font-weight: 700; color: #fff; }
+  .chat-form button:hover { background: #a566ff; }
+
+  /* dialogs */
+  dialog.dlg { border: 1px solid var(--line); background: var(--surface); color: var(--fg); border-radius: 18px; padding: 0; width: min(460px, calc(100vw - 32px)); max-height: calc(100dvh - 32px); overflow: auto; box-shadow: 0 30px 80px rgba(0, 0, 0, 0.6); }
+  dialog.dlg::backdrop { background: rgba(8, 6, 14, 0.72); backdrop-filter: blur(3px); }
+  .dlg-in { padding: 22px; display: grid; gap: 16px; }
+  .dlg-h { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
+  .dlg-h h3 { margin: 0; font: 700 22px/1.15 var(--font-display); }
+  .dlg-h p { margin: 4px 0 0; color: var(--muted); }
+  .x { width: 32px; height: 32px; border-radius: 50%; border: 1px solid var(--line); background: var(--surface-2); display: grid; place-items: center; flex: none; }
+  .x:hover { border-color: var(--accent); }
+  .amts { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+  .amt { display: flex; align-items: center; justify-content: center; gap: 7px; padding: 14px 10px; border-radius: 10px; border: 1.5px solid var(--line); background: var(--surface-2); font-weight: 800; font-size: 18px; font-variant-numeric: tabular-nums; transition: border-color 0.15s, background 0.15s; }
+  .amt .gem { color: var(--accent-hi); font-size: 18px; }
+  .amt:hover:not(:disabled) { border-color: var(--accent-hi); }
+  .amt[aria-pressed="true"] { border-color: var(--accent); background: rgba(145, 70, 255, 0.2); box-shadow: inset 0 0 0 1px var(--accent); }
+  .amt:disabled { opacity: 0.38; cursor: not-allowed; }
+  .field label { display: block; font-size: 12px; font-weight: 700; color: var(--muted); margin-bottom: 6px; letter-spacing: 0.04em; text-transform: uppercase; }
+  .field input { width: 100%; background: #0e0c14; color: var(--fg); border: 1.5px solid var(--line); border-radius: 10px; padding: 11px 14px; font: 700 16px var(--font-body); font-variant-numeric: tabular-nums; }
+  .field input:focus { border-color: var(--accent); }
+  .sum { display: grid; gap: 7px; background: #100d18; border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; }
+  .sum div { display: flex; justify-content: space-between; gap: 12px; color: var(--muted); }
+  .sum b { color: var(--fg); font-variant-numeric: tabular-nums; }
+  .note { margin: 0; font-size: 13px; color: var(--muted); min-height: 1.3em; }
+  .note.err { color: var(--warn); }
+  .dlg-actions { display: grid; grid-template-columns: 1fr 2fr; gap: 10px; }
+  .btn { padding: 13px 16px; border-radius: 10px; border: 1px solid var(--line); background: var(--surface-2); font-weight: 700; font-size: 15px; }
+  .btn:hover { border-color: var(--accent-hi); }
+  .btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 800; }
+  .btn.primary:hover:not(:disabled) { background: #a566ff; }
+  .btn.primary:disabled { opacity: 0.45; cursor: not-allowed; }
+  .btn.gold { background: linear-gradient(180deg, #ffe08a, var(--gold-lo)); border-color: transparent; color: #2a1a00; font-weight: 800; }
+  .btn[aria-pressed="true"] { background: var(--surface-2); color: var(--gold); border-color: rgba(245, 196, 81, 0.6); }
+
+  .reward-stage { position: relative; aspect-ratio: 1 / 0.8; border-radius: 14px; border: 1px solid rgba(245, 196, 81, 0.5); background: radial-gradient(circle at 50% 45%, #4a3a78 0%, #1a1429 70%); overflow: hidden; }
+  .reward-stage svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+
+  .toast { position: fixed; left: 50%; bottom: calc(env(safe-area-inset-bottom, 0px) + 18px); transform: translate(-50%, 24px); opacity: 0; pointer-events: none; z-index: 50; max-width: calc(100vw - 32px); background: #251f38; border: 1px solid var(--accent); border-radius: 10px; padding: 10px 16px; font-weight: 600; box-shadow: 0 12px 34px rgba(0, 0, 0, 0.5); transition: opacity 0.25s, transform 0.3s; text-align: center; }
+  .toast.show { opacity: 1; transform: translate(-50%, 0); }
+
+  @keyframes bob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(3px); } }
+  @keyframes stagePulse { 0%, 100% { box-shadow: 0 0 0 0 rgba(145, 70, 255, 0.0), inset 0 0 30px rgba(145, 70, 255, 0.1); } 50% { box-shadow: 0 0 34px 2px rgba(145, 70, 255, 0.45), inset 0 0 44px rgba(145, 70, 255, 0.25); } }
+  @keyframes shimmer { to { transform: translateX(100%); } }
+  @keyframes flash { 0% { opacity: 0; } 20% { opacity: 1; } 100% { opacity: 0; } }
+  @keyframes floatUp { 0% { opacity: 0; transform: translate(-50%, 18px) scale(0.8); } 20% { opacity: 1; } 100% { opacity: 0; transform: translate(-50%, -54px) scale(1.1); } }
+  @keyframes spark { 0% { opacity: 1; transform: translate(-50%, -50%) scale(0.2) rotate(0deg); } 100% { opacity: 0; transform: translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))) scale(1) rotate(120deg); } }
+  @keyframes hudPop { 0% { transform: scale(1); } 35% { transform: scale(1.3) rotate(-6deg); } 100% { transform: scale(1); } }
+  @keyframes hudGlow { 0%, 100% { filter: drop-shadow(0 0 6px rgba(245, 196, 81, 0.5)); } 50% { filter: drop-shadow(0 0 14px rgba(245, 196, 81, 0.95)); } }
+  @keyframes auraPulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.06); } }
+  .unlock[data-state="almost"] #aura, .unlock[data-state="complete"] #aura { transform-origin: 150px 150px; animation: auraPulse 1.9s ease-in-out infinite; }
+
+  /* multi-level reward run */
+  [hidden] { display: none !important; }
+  .main-col { grid-template-columns: minmax(0, 1fr); }
+  .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  .u-titles { flex: 1 1 320px; min-width: 0; }
+  .u-actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .btn.small { padding: 8px 14px; font-size: 13px; display: inline-flex; align-items: center; gap: 7px; }
+  .btn.small svg { width: 15px; height: 15px; }
+  .mini-label { margin: 0; font-size: 11px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
+  .lvtag { margin: 0; font-size: 12px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--accent-hi); }
+  .lvtag.gold { color: var(--gold); }
+  .reward-h { margin: 2px 0 0; font: 700 26px/1.12 var(--font-display); text-wrap: balance; overflow-wrap: anywhere; }
+  .cat-chip { display: inline-block; padding: 3px 10px; border-radius: 999px; border: 1px solid var(--line); background: var(--surface-2); font-size: 12px; font-weight: 700; color: var(--muted); }
+  .rdesc { margin: 0; color: var(--muted); }
+  .info-active, .info-done { display: grid; gap: 12px; min-width: 0; }
+  .msg { font-size: 16px; min-height: 0; color: var(--accent-hi); }
+  .unlock[data-state="complete"] .msg { color: var(--gold); }
+  .pick { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-radius: 10px; border: 1px solid rgba(180, 138, 255, 0.45); background: rgba(145, 70, 255, 0.14); font-weight: 600; }
+  .pick.won { border-color: rgba(245, 196, 81, 0.55); background: rgba(245, 196, 81, 0.1); }
+  .pick span { min-width: 0; overflow-wrap: anywhere; }
+  .linkbtn { margin-left: auto; flex: none; border: 0; background: none; color: var(--accent-hi); font-weight: 800; text-decoration: underline; padding: 2px 4px; }
+  .stats { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+  .stats li { background: var(--surface-2); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; }
+  .stats b { display: block; font: 800 22px var(--font-body); font-variant-numeric: tabular-nums; color: var(--gold); }
+  .stats span { font-size: 12px; color: var(--muted); }
+  .recap { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+  .recap button { width: 100%; display: flex; align-items: center; gap: 10px; text-align: left; padding: 6px 10px; border-radius: 10px; border: 1px solid var(--line); background: var(--surface-2); font-weight: 600; }
+  .recap button:hover { border-color: var(--gold); }
+  .recap svg.ic { width: 34px; height: 34px; flex: none; border-radius: 8px; background: #1a1429; }
+  .recap .rt { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+  .recap .ck { width: 18px; height: 18px; border-radius: 50%; background: var(--gold); color: #2a1a00; display: grid; place-items: center; flex: none; }
+  .recap .ck svg { width: 10px; height: 10px; }
+
+  .track { list-style: none; margin: 18px 0 0; padding: 4px 2px 8px; display: grid; grid-auto-flow: column; grid-auto-columns: minmax(176px, 1fr); gap: 16px; overflow-x: auto; scrollbar-width: thin; }
+  .lvli { position: relative; display: flex; min-width: 0; }
+  .lvli:not(:last-child)::after { content: ""; position: absolute; left: 100%; top: 36px; width: 16px; height: 2px; background: var(--line); }
+  .lvli.done:not(:last-child)::after { background: var(--gold); }
+  .lv { flex: 1; min-width: 0; display: grid; align-content: start; gap: 8px; text-align: left; padding: 12px; border-radius: 12px; border: 1.5px solid var(--line); background: var(--surface-2); transition: border-color 0.2s, background 0.2s, transform 0.15s; }
+  .lv:hover { border-color: var(--accent-hi); transform: translateY(-1px); }
+  .lv.active { border-color: var(--accent); background: rgba(145, 70, 255, 0.14); box-shadow: 0 0 0 1px var(--accent), 0 0 24px rgba(145, 70, 255, 0.25); }
+  .lv.done { border-color: rgba(245, 196, 81, 0.5); }
+  .lv.locked { background: #1a1626; }
+  .lv.pop { animation: lvPop 0.7s cubic-bezier(0.2, 1.4, 0.4, 1); }
+  .lv-top { display: flex; align-items: center; gap: 8px; }
+  .lv-badge { width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; font-size: 12px; font-weight: 800; background: #0e0c14; border: 1px solid var(--line); color: var(--muted); flex: none; }
+  .lv-badge svg { width: 12px; height: 12px; }
+  .lv.active .lv-badge { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .lv.done .lv-badge { background: var(--gold); border-color: var(--gold); color: #2a1a00; }
+  .lv-n { font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+  .lv-goal { margin-left: auto; font-size: 12px; font-weight: 700; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .lv-art { height: 84px; border-radius: 10px; background: radial-gradient(circle at 50% 45%, #302656, #181226 75%); display: grid; place-items: center; overflow: hidden; }
+  .lv-art svg { width: 70px; height: 70px; }
+  .lv.locked .lv-art svg { filter: brightness(0.42) saturate(0.5); }
+  .lv-name { font: 700 15px/1.2 var(--font-display); overflow-wrap: anywhere; }
+  .lv-reward { font-size: 12.5px; color: var(--muted); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; overflow-wrap: anywhere; }
+  .lv-bar { height: 6px; border-radius: 999px; background: #0c0a12; overflow: hidden; }
+  .lv-bar span { display: block; height: 100%; width: 0; background: linear-gradient(90deg, var(--accent-lo), var(--accent-hi)); }
+
+  .earned { margin-top: 14px; display: flex; align-items: center; gap: 14px; padding: 10px 14px; border-radius: 12px; border: 1px solid rgba(245, 196, 81, 0.5); background: rgba(245, 196, 81, 0.1); animation: earnedIn 0.5s ease; }
+  .earned > svg { width: 46px; height: 46px; flex: none; border-radius: 10px; background: #1a1429; }
+  .earned .et { flex: 1; min-width: 0; display: grid; }
+  .earned b { color: var(--gold); font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; }
+  .earned .et span { font-weight: 600; overflow-wrap: anywhere; }
+
+  .poll { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 22px; }
+  .p-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; flex-wrap: wrap; }
+  .p-titles { flex: 1 1 320px; min-width: 0; }
+  .p-head h3 { margin: 0; font: 700 24px/1.15 var(--font-display); text-wrap: balance; }
+  .free { margin-left: 8px; padding: 2px 9px; border-radius: 999px; border: 1px solid rgba(61, 220, 151, 0.55); color: #3ddc97; letter-spacing: 0.04em; font-size: 11px; }
+  .pstatus { display: inline-flex; align-items: center; gap: 8px; border-radius: 999px; padding: 6px 14px; font-weight: 700; font-size: 13px; border: 1px solid var(--line); background: var(--surface-2); white-space: nowrap; font-variant-numeric: tabular-nums; }
+  .pstatus.open { border-color: rgba(180, 138, 255, 0.5); color: var(--accent-hi); }
+  .pstatus.closed { border-color: rgba(245, 196, 81, 0.6); color: var(--gold); }
+  .pstatus .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--live); animation: dotPulse 1.4s ease-in-out infinite; }
+  .opts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin-top: 16px; }
+  .opt { position: relative; display: grid; align-content: start; gap: 10px; padding: 14px; border-radius: 14px; border: 1.5px solid var(--line); background: var(--surface-2); transition: border-color 0.2s, box-shadow 0.2s; }
+  .opt.mine { border-color: var(--oc); box-shadow: inset 0 0 0 1px var(--oc); }
+  .opt.win { border-color: var(--gold); box-shadow: 0 0 0 1px var(--gold), 0 0 26px rgba(245, 196, 81, 0.2); }
+  .opt-top { display: flex; align-items: flex-start; gap: 10px; }
+  .opt-top h4 { margin: 0; font: 700 16px/1.25 var(--font-display); overflow-wrap: anywhere; }
+  .opt-l { width: 28px; height: 28px; border-radius: 8px; flex: none; display: grid; place-items: center; font-weight: 800; background: color-mix(in srgb, var(--oc) 28%, #0e0c14); color: var(--oc); border: 1px solid var(--oc); }
+  .opt p { margin: 0; color: var(--muted); font-size: 13px; }
+  .opt-res { display: flex; align-items: baseline; gap: 8px; }
+  .opt-pct { font: 800 26px var(--font-body); font-variant-numeric: tabular-nums; }
+  .opt-n { color: var(--muted); font-size: 12px; font-variant-numeric: tabular-nums; }
+  .opt-bar { height: 8px; border-radius: 999px; background: #0c0a12; overflow: hidden; }
+  .opt-bar span { display: block; height: 100%; width: 0; border-radius: 999px; background: var(--oc); transition: width 0.5s ease; }
+  .opt-win { position: absolute; top: -10px; right: 12px; display: none; padding: 2px 10px; border-radius: 999px; background: linear-gradient(180deg, #ffe08a, var(--gold-lo)); color: #2a1a00; font: 800 12px var(--font-display); letter-spacing: 0.03em; }
+  .opt.win .opt-win { display: block; }
+  .vote-btn { padding: 11px 12px; border-radius: 10px; border: 1.5px solid var(--oc); background: transparent; color: var(--fg); font-weight: 800; transition: background 0.15s; }
+  .vote-btn:hover:not(:disabled) { background: color-mix(in srgb, var(--oc) 30%, transparent); }
+  .vote-btn.on { background: var(--oc); color: #0f0d15; }
+  .vote-btn:disabled { cursor: default; opacity: 0.6; }
+  .vote-btn.on:disabled { opacity: 1; }
+  .pwin { margin-top: 14px; padding: 12px 14px; border-radius: 12px; border: 1px solid rgba(245, 196, 81, 0.55); background: rgba(245, 196, 81, 0.1); }
+  .p-foot { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; margin-top: 14px; color: var(--muted); font-size: 13px; }
+
+  .devp { background: #120f1b; border-bottom: 1px dashed var(--line); }
+  .devp > summary { list-style: none; cursor: pointer; }
+  .devp > summary::-webkit-details-marker { display: none; }
+  .devp > summary:focus-visible { outline: 3px solid var(--accent-hi); outline-offset: -3px; }
+  .sum-row { display: flex; align-items: center; gap: 10px; padding-block: 9px; flex-wrap: wrap; }
+  .sum-row::before { content: "\25B8"; color: var(--muted); }
+  .devp[open] .sum-row::before { content: "\25BE"; }
+  .dev-hint { color: #8c86a6; font-size: 12px; }
+  .dev-body { display: grid; gap: 10px; padding-block: 4px 14px; }
+  .dev-grp { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 10px; }
+  .dev-grp > .dev-label { min-width: 92px; }
+  .dev-sel { background: #0e0c14; color: var(--fg); border: 1px solid var(--line); border-radius: 999px; padding: 5px 10px; font: inherit; font-size: 13px; }
+  .dev-range { display: inline-flex; align-items: center; gap: 8px; font-weight: 700; font-variant-numeric: tabular-nums; }
+  .dev-range input { accent-color: var(--accent); width: 160px; }
+
+  dialog.dlg.wide { width: min(780px, calc(100vw - 32px)); }
+  .field textarea, .field select { width: 100%; background: #0e0c14; color: var(--fg); border: 1.5px solid var(--line); border-radius: 10px; padding: 10px 12px; font: 600 14px var(--font-body); }
+  .field textarea { resize: vertical; min-height: 64px; }
+  .field textarea:focus, .field select:focus { border-color: var(--accent); }
+  .field input[type="text"] { font-weight: 600; font-size: 14px; }
+  .ed-body { display: grid; gap: 14px; }
+  .ed-sec > h4 { margin: 0 0 10px; font: 700 16px var(--font-display); }
+  .form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+  .form-grid .span2 { grid-column: 1 / -1; }
+  .lvl-ed { border: 1px solid var(--line); border-radius: 12px; background: var(--surface-2); margin-bottom: 8px; }
+  .lvl-ed > summary { padding: 10px 14px; cursor: pointer; font-weight: 700; }
+  .lvl-ed .form-grid { padding: 4px 14px 14px; }
+  .ed-actions { grid-template-columns: auto 1fr 1.4fr; position: sticky; bottom: -22px; background: var(--surface); padding-block: 12px; margin-bottom: -22px; border-top: 1px solid var(--line); }
+  .rd-status { margin: 0; font-weight: 700; color: var(--accent-hi); }
+  .reward-stage.dim svg { filter: brightness(0.5) saturate(0.6); }
+  .reward-stage svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+  .hud { position: absolute; top: 10px; right: 10px; display: flex; align-items: center; gap: 10px; max-width: min(250px, 62%); padding: 7px 12px 7px 7px; text-align: left; border-radius: 12px; border: 1px solid rgba(180, 138, 255, 0.45); background: rgba(15, 13, 21, 0.84); backdrop-filter: blur(6px); transition: border-color 0.2s, transform 0.15s; }
+  .hud:hover { border-color: var(--accent-hi); transform: translateY(-1px); }
+  .hud-r { position: relative; width: 46px; height: 46px; flex: none; }
+  .hud-ring { width: 100%; height: 100%; display: block; }
+  .hud-track { fill: none; stroke: rgba(180, 138, 255, 0.22); stroke-width: 8; }
+  .hud-arc { fill: none; stroke: var(--accent-hi); stroke-width: 8; stroke-linecap: round; stroke-dasharray: 251.33; stroke-dashoffset: 251.33; transform: rotate(-90deg); transform-origin: 50px 50px; }
+  .hud-pct { position: absolute; inset: 0; display: grid; place-items: center; font: 800 12px var(--font-body); font-variant-numeric: tabular-nums; }
+  .hud-text { display: grid; gap: 1px; min-width: 0; }
+  .hud-text b { font: 700 13px/1.2 var(--font-display); white-space: nowrap; }
+  .hud-text span { font-size: 11.5px; color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .hud.done { border-color: rgba(245, 196, 81, 0.7); }
+  .hud.done .hud-arc { stroke: var(--gold); }
+  .hud.done .hud-pct, .hud.done .hud-text b { color: var(--gold); }
+  .hud.pop { animation: hudPop 1.2s ease; }
+  @keyframes hudPop { 0% { transform: scale(1); } 35% { transform: scale(1.07); } 100% { transform: scale(1); } }
+
+  @keyframes lvPop { 0% { transform: scale(1); } 40% { transform: scale(1.06); } 100% { transform: scale(1); } }
+  @keyframes earnedIn { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: none; } }
+  @keyframes dotPulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.35; } }
+
+  @media (max-width: 860px) {
+    .opts { grid-template-columns: minmax(0, 1fr); }
+  }
+  @media (max-width: 600px) {
+    .form-grid { grid-template-columns: minmax(0, 1fr); }
+    .stats { grid-template-columns: minmax(0, 1fr); }
+    .ed-actions { grid-template-columns: 1fr 1fr; }
+    .ed-actions .primary { grid-column: 1 / -1; }
+    .poll { padding: 16px; }
+    .reward-h { font-size: 22px; }
+    .dev-range input { width: 120px; }
+  }
+
+  @media (max-width: 1023px) {
+    .layout { grid-template-columns: minmax(0, 1fr); }
+    .chat { position: static; height: 480px; min-height: 0; }
+  }
+  @media (max-width: 700px) {
+    .u-body { grid-template-columns: minmax(0, 1fr); gap: 20px; }
+    .stage { max-width: 360px; width: 100%; margin: 0 auto; }
+    .unlock { padding: 16px; }
+    .u-head h2 { font-size: 24px; }
+    .big { font-size: 36px; }
+    .nav { display: none; }
+    .toggle { margin-left: 0; }
+  }
+  @media (max-width: 520px) {
+    .hud-next { display: none; }
+    .hud { max-width: 72%; }
+    .pill.views { display: none; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation: none !important; transition-duration: 0.01ms !important; }
+  }
+</style>
+
+<!-- shared artwork: reward illustrations, icons -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <defs>
+    <linearGradient id="gCone" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#c4a0ff"/><stop offset="0.5" stop-color="#7a3df0"/><stop offset="1" stop-color="#43209f"/>
+    </linearGradient>
+    <linearGradient id="gBrim" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#7340ea"/><stop offset="1" stop-color="#341780"/>
+    </linearGradient>
+    <linearGradient id="gGold" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#fff0b8"/><stop offset="0.5" stop-color="#f5c451"/><stop offset="1" stop-color="#e08a14"/>
+    </linearGradient>
+    <path id="starP" d="M0 -10 L2.9 -3.1 L9.5 -3.1 L4.2 1.6 L5.9 8.1 L0 4.2 L-5.9 8.1 L-4.2 1.6 L-9.5 -3.1 L-2.9 -3.1 Z"/>
+    <g id="art-vote">
+      <rect x="52" y="48" width="196" height="204" rx="22" fill="#2a2150" stroke="#9a6dff" stroke-opacity="0.6" stroke-width="4"/>
+      <rect x="76" y="82" width="148" height="26" rx="13" fill="#1d1050"/><rect x="76" y="82" width="104" height="26" rx="13" fill="url(#gCone)"/>
+      <rect x="76" y="132" width="148" height="26" rx="13" fill="#1d1050"/><rect x="76" y="132" width="132" height="26" rx="13" fill="url(#gGold)"/>
+      <rect x="76" y="182" width="148" height="26" rx="13" fill="#1d1050"/><rect x="76" y="182" width="64" height="26" rx="13" fill="url(#gCone)"/>
+      <circle cx="214" cy="145" r="22" fill="#3ddc97"/>
+      <path d="M203 145 L211 154 L226 136" stroke="#0f0d15" stroke-width="6" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+    </g>
+    <g id="art-challenge">
+      <path d="M150 38 L242 74 V150 C242 208 198 244 150 264 C102 244 58 208 58 150 V74Z" fill="url(#gCone)" stroke="url(#gGold)" stroke-width="8" stroke-linejoin="round"/>
+      <path d="M158 78 L102 158 H140 L126 226 L202 128 H160 Z" fill="url(#gGold)"/>
+    </g>
+    <g id="art-gamepad">
+      <path d="M96 96 H204 C246 96 270 140 266 190 C263 224 240 236 222 218 L196 192 H104 L78 218 C60 236 37 224 34 190 C30 140 54 96 96 96Z" fill="url(#gCone)" stroke="#9a6dff" stroke-opacity="0.55" stroke-width="3"/>
+      <path d="M70 118 C86 104 130 100 150 100" stroke="#fff" stroke-opacity="0.35" stroke-width="5" stroke-linecap="round" fill="none"/>
+      <rect x="76" y="132" width="22" height="58" rx="5" fill="#1d1050"/>
+      <rect x="58" y="150" width="58" height="22" rx="5" fill="#1d1050"/>
+      <circle cx="208" cy="134" r="12" fill="url(#gGold)"/>
+      <circle cx="234" cy="158" r="12" fill="#ff4d8d"/>
+      <circle cx="182" cy="158" r="12" fill="#3ddc97"/>
+      <circle cx="208" cy="182" r="12" fill="#6fb7ff"/>
+    </g>
+    <g id="art-burst">
+      <g stroke-width="12" stroke-linecap="round">
+        <line x1="150" y1="40" x2="150" y2="88" transform="rotate(0 150 150)" stroke="#f5c451"/>
+        <line x1="150" y1="40" x2="150" y2="88" transform="rotate(45 150 150)" stroke="#b48aff"/>
+        <line x1="150" y1="40" x2="150" y2="88" transform="rotate(90 150 150)" stroke="#f5c451"/>
+        <line x1="150" y1="40" x2="150" y2="88" transform="rotate(135 150 150)" stroke="#ff4d8d"/>
+        <line x1="150" y1="40" x2="150" y2="88" transform="rotate(180 150 150)" stroke="#f5c451"/>
+        <line x1="150" y1="40" x2="150" y2="88" transform="rotate(225 150 150)" stroke="#b48aff"/>
+        <line x1="150" y1="40" x2="150" y2="88" transform="rotate(270 150 150)" stroke="#f5c451"/>
+        <line x1="150" y1="40" x2="150" y2="88" transform="rotate(315 150 150)" stroke="#ff4d8d"/>
+      </g>
+      <use href="#starP" transform="translate(150 150) scale(5)" fill="url(#gGold)"/>
+      <circle cx="58" cy="60" r="7" fill="#b48aff"/><circle cx="246" cy="64" r="6" fill="#ff4d8d"/>
+      <circle cx="248" cy="240" r="7" fill="#f5c451"/><circle cx="54" cy="244" r="6" fill="#3ddc97"/>
+    </g>
+    <g id="art-mural">
+      <rect x="46" y="46" width="208" height="208" rx="18" fill="#20193a" stroke="url(#gGold)" stroke-width="6"/>
+      <rect x="64" y="64" width="52" height="52" rx="8" fill="#7a3df0"/><rect x="124" y="64" width="52" height="52" rx="8" fill="#f5c451"/><rect x="184" y="64" width="52" height="52" rx="8" fill="#3ddc97"/>
+      <rect x="64" y="124" width="52" height="52" rx="8" fill="#ff4d8d"/><rect x="124" y="124" width="52" height="52" rx="8" fill="#b48aff"/><rect x="184" y="124" width="52" height="52" rx="8" fill="#6fb7ff"/>
+      <rect x="64" y="184" width="52" height="52" rx="8" fill="#f5c451"/><rect x="124" y="184" width="52" height="52" rx="8" fill="#43209f"/><rect x="184" y="184" width="52" height="52" rx="8" fill="#ff4d8d"/>
+      <use href="#starP" transform="translate(150 150) scale(2.2)" fill="#fff0b8"/>
+    </g>
+    <g id="art-trophy">
+      <path d="M104 72 H78 C76 124 94 146 116 148" fill="none" stroke="url(#gGold)" stroke-width="12" stroke-linecap="round"/>
+      <path d="M196 72 H222 C224 124 206 146 184 148" fill="none" stroke="url(#gGold)" stroke-width="12" stroke-linecap="round"/>
+      <path d="M96 50 H204 V120 C204 164 178 190 150 190 C122 190 96 164 96 120Z" fill="url(#gGold)"/>
+      <path d="M116 66 C112 110 120 150 140 172" stroke="#fff" stroke-opacity="0.5" stroke-width="7" fill="none" stroke-linecap="round"/>
+      <rect x="136" y="188" width="28" height="36" fill="url(#gGold)"/>
+      <rect x="100" y="222" width="100" height="26" rx="8" fill="url(#gCone)"/>
+      <use href="#starP" transform="translate(150 112) scale(2.6)" fill="#7a3df0"/>
+    </g>
+    <g id="art-gift">
+      <rect x="62" y="132" width="176" height="112" rx="12" fill="url(#gCone)"/>
+      <rect x="50" y="102" width="200" height="42" rx="12" fill="url(#gBrim)" stroke="#9a6dff" stroke-opacity="0.5" stroke-width="2"/>
+      <rect x="138" y="102" width="24" height="142" fill="url(#gGold)"/>
+      <path d="M150 102 C120 52 70 62 96 96 C108 108 138 104 150 102Z" fill="url(#gGold)"/>
+      <path d="M150 102 C180 52 230 62 204 96 C192 108 162 104 150 102Z" fill="url(#gGold)"/>
+      <circle cx="150" cy="100" r="11" fill="#e08a14"/>
+    </g>
+    <symbol id="gem" viewBox="0 0 16 16">
+      <path d="M8 1 L14.5 6 L8 15 L1.5 6 Z" fill="currentColor"/>
+      <path d="M1.5 6 H14.5 M5.2 6 L8 15 L10.8 6 L8 1 Z" fill="none" stroke="#0f0d15" stroke-opacity="0.35" stroke-width="0.9" stroke-linejoin="round"/>
+    </symbol>
+      </defs>
+</svg>
+
+<header class="topbar">
+  <div class="inner">
+    <div class="logo" aria-hidden="true">
+      <svg width="16" height="16" viewBox="0 0 16 16"><path d="M2 2h12v8l-3 3H8l-2 2v-2H2z" fill="#fff"/></svg>
+    </div>
+    <nav class="nav" aria-label="Prototype navigation"><span>Following</span><span>Browse</span></nav>
+    <div class="spacer"></div>
+    <div class="balance" title="Simulated Bits balance"><svg class="gem" aria-hidden="true"><use href="#gem"/></svg><span id="balance">12,500</span></div>
+    <div class="me" aria-hidden="true">Y</div>
+  </div>
+</header>
+
+<details class="devp" id="devp">
+  <summary>
+    <div class="inner sum-row">
+      <span class="dev-label">Prototype controls</span>
+      <span class="dev-hint">Testing only. Open to jump between levels, progress and poll states.</span>
+    </div>
+  </summary>
+  <div class="inner dev-body">
+    <div class="dev-grp">
+      <span class="dev-label">Event</span>
+      <button class="chip reset" type="button" id="devReset">Reset event</button>
+      <label class="sr-only" for="devJump">Jump to level</label>
+      <select class="dev-sel" id="devJump"></select>
+      <button class="chip" type="button" id="devJumpGo">Jump</button>
+      <button class="chip" type="button" id="devCompleteLevel">Complete active level</button>
+      <button class="chip" type="button" id="devCompleteEvent">Complete entire event</button>
+      <button class="chip" type="button" id="devContribute">Simulate a contribution</button>
+      <label class="toggle" for="simToggle"><input type="checkbox" id="simToggle"> Simulated viewers contribute</label>
+    </div>
+    <div class="dev-grp">
+      <span class="dev-label">Active level</span>
+      <button class="chip" type="button" data-p="0">0%</button>
+      <button class="chip" type="button" data-p="25">25%</button>
+      <button class="chip" type="button" data-p="50">50%</button>
+      <button class="chip" type="button" data-p="75">75%</button>
+      <button class="chip" type="button" data-p="95">95%</button>
+      <label class="dev-range" for="devSlider">
+        <input type="range" id="devSlider" min="0" max="99" step="1" value="0">
+        <output id="devSliderOut" for="devSlider">0%</output>
+      </label>
+    </div>
+    <div class="dev-grp">
+      <span class="dev-label">Voting</span>
+      <button class="chip" type="button" id="devOpen">Open voting</button>
+      <button class="chip" type="button" id="devClose">Close voting</button>
+      <button class="chip" type="button" id="devSim">Simulate poll result</button>
+      <button class="chip reset" type="button" id="devResetPoll">Reset poll</button>
+    </div>
+  </div>
+</details>
+
+<div class="inner">
+  <main class="layout">
+    <div class="main-col">
+
+      <section class="player" id="player" aria-label="Livestream">
+        <svg viewBox="0 0 640 360" preserveAspectRatio="xMidYMid slice" role="img" aria-label="Livestream of LunaPlays, an illustrated streamer wearing a headset">
+          <defs>
+            <linearGradient id="bgS" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#31205f"/><stop offset="1" stop-color="#110c1f"/></linearGradient>
+            <linearGradient id="hood" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7d4cf0"/><stop offset="1" stop-color="#3b1d88"/></linearGradient>
+            <radialGradient id="lamp"><stop offset="0" stop-color="#b48aff" stop-opacity="0.55"/><stop offset="1" stop-color="#b48aff" stop-opacity="0"/></radialGradient>
+          </defs>
+          <rect width="640" height="360" fill="url(#bgS)"/>
+          <circle cx="120" cy="90" r="130" fill="url(#lamp)"/>
+          <circle cx="540" cy="70" r="90" fill="url(#lamp)" opacity="0.6"/>
+          <rect x="70" y="150" width="150" height="6" rx="3" fill="#b48aff" opacity="0.8"/>
+          <rect x="70" y="166" width="96" height="6" rx="3" fill="#3ddc97" opacity="0.6"/>
+          <rect x="470" y="168" width="130" height="6" rx="3" fill="#4a3d70"/>
+          <rect x="482" y="138" width="22" height="30" rx="3" fill="#6b57a8"/>
+          <rect x="510" y="148" width="18" height="20" rx="3" fill="#3ddc97" opacity="0.7"/>
+          <circle cx="572" cy="152" r="14" fill="#f5c451" opacity="0.85"/>
+          <g class="bob">
+            <path d="M196 362 C202 290 250 264 320 264 C390 264 438 290 444 362 Z" fill="url(#hood)"/>
+            <path d="M296 266 C300 300 310 318 320 322 C330 318 340 300 344 266" fill="none" stroke="#2c1568" stroke-width="5" stroke-linecap="round"/>
+            <rect x="302" y="236" width="36" height="34" rx="12" fill="#e8b895"/>
+            <circle cx="320" cy="196" r="46" fill="#f0c4a0"/>
+            <path d="M270 198 C266 148 300 138 322 140 C354 140 374 160 370 198 C360 172 342 166 320 166 C298 166 280 174 270 198 Z" fill="#2b1d3f"/>
+            <circle cx="304" cy="200" r="4" fill="#1b1325"/>
+            <circle cx="338" cy="200" r="4" fill="#1b1325"/>
+            <path d="M306 220 Q321 233 336 220" fill="none" stroke="#8a4b45" stroke-width="3" stroke-linecap="round"/>
+            <path d="M274 198 C268 146 372 146 366 198" fill="none" stroke="#1a1822" stroke-width="8" stroke-linecap="round"/>
+            <rect x="262" y="188" width="16" height="32" rx="7" fill="#1a1822"/>
+            <rect x="262" y="196" width="6" height="16" rx="3" fill="#9146ff"/>
+            <rect x="362" y="188" width="16" height="32" rx="7" fill="#1a1822"/>
+            <path d="M270 216 C274 244 296 250 312 244" fill="none" stroke="#1a1822" stroke-width="4" stroke-linecap="round"/>
+            <circle cx="314" cy="244" r="6" fill="#1a1822"/>
+                      </g>
+          <rect x="120" y="318" width="400" height="48" fill="#1a1428"/>
+          <rect x="120" y="318" width="400" height="3" fill="#4a3d70"/>
+        </svg>
+        <span class="pill live">Live</span>
+        <span class="pill views">12.4K watching</span>
+        <button class="hud" id="hud" type="button" aria-label="Community progress. Jump to the reward panel">
+          <span class="hud-r">
+            <svg class="hud-ring" viewBox="0 0 100 100" aria-hidden="true"><circle class="hud-track" cx="50" cy="50" r="40"/><circle class="hud-arc" id="hudRing" cx="50" cy="50" r="40"/></svg>
+            <span class="hud-pct" id="hudPct">0%</span>
+          </span>
+          <span class="hud-text"><b id="hudLevel">Level 1 of 4</b><span id="hudBits"></span><span class="hud-next" id="hudNext"></span></span>
+        </button>
+      </section>
+
+      <section class="info" aria-label="Channel">
+        <div class="ch-avatar" aria-hidden="true">L</div>
+        <div class="ch-text">
+          <div class="ch-name">LunaPlays
+            <svg width="16" height="16" viewBox="0 0 16 16" aria-label="Verified"><circle cx="8" cy="8" r="8" fill="#9146ff"/><path d="M4.5 8.3l2.2 2.2 4.6-4.8" stroke="#fff" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </div>
+          <div class="ch-title" id="chTitle">Community Reward Run</div>
+          <div class="ch-meta"><span class="cat">Just Chatting</span><span>English</span><span>Community goal</span></div>
+        </div>
+        <button class="follow" id="follow" type="button" aria-pressed="false">Follow</button>
+      </section>
+
+      <section class="unlock" id="unlock" data-state="locked" aria-labelledby="unlockTitle">
+        <div class="u-head">
+          <div class="u-titles">
+            <p class="eyebrow" id="eventEyebrow">Live community event</p>
+            <h2 id="unlockTitle">Community Reward Run</h2>
+            <p class="u-sub" id="eventDesc"></p>
+          </div>
+          <div class="u-actions">
+            <span class="status" id="statusPill">Locked</span>
+            <button class="btn small" type="button" id="customizeBtn">
+              <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><path d="M2 4h12M2 8h12M2 12h12"/><circle cx="5" cy="4" r="1.6" fill="currentColor"/><circle cx="11" cy="8" r="1.6" fill="currentColor"/><circle cx="7" cy="12" r="1.6" fill="currentColor"/></svg>
+              Customize Event
+            </button>
+          </div>
+        </div>
+
+        <ol class="track" id="track" aria-label="Reward levels"></ol>
+        <div class="earned" id="earned" hidden></div>
+
+        <div class="u-body">
+          <div class="stage" id="stage">
+            <svg viewBox="0 0 300 300" role="img" id="stageSvg" aria-label="Reward preview">
+              <defs><radialGradient id="auraG"><stop offset="0" stop-color="#9146ff" stop-opacity="0.8"/><stop offset="1" stop-color="#9146ff" stop-opacity="0"/></radialGradient></defs>
+              <circle id="aura" cx="150" cy="150" r="140" fill="url(#auraG)" style="opacity:0.3"/>
+              <use id="stageArt" href="#art-challenge"/>
+            </svg>
+            <span class="badge-unlocked" id="stageBadge">Unlocked!</span>
+          </div>
+
+          <div class="u-info">
+            <div class="info-active" id="infoActive">
+              <p class="lvtag" id="lvTag"></p>
+              <div>
+                <p class="mini-label">Next reward</p>
+                <h3 class="reward-h" id="rewardH"></h3>
+              </div>
+              <div><span class="cat-chip" id="catChip"></span></div>
+              <p class="rdesc" id="rewardD"></p>
+              <div class="pick" id="pick" hidden></div>
+              <div class="numbers">
+                <span class="big" id="bitsNow">0</span>
+                <span class="of">/ <span id="bitsGoal">0</span> Bits</span>
+                <span class="pct" id="pct">0%</span>
+              </div>
+              <div class="bar" id="bar" role="progressbar" aria-label="Bits contributed toward this level" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+                <div class="fill" id="fill"></div>
+                <span class="tick" style="left:25%"></span><span class="tick" style="left:50%"></span><span class="tick" style="left:75%"></span>
+              </div>
+              <p class="remaining"><svg class="gem" aria-hidden="true"><use href="#gem"/></svg><span id="remText"></span></p>
+              <p class="msg" id="msg" aria-live="polite"></p>
+            </div>
+
+            <div class="info-done" id="infoDone" hidden>
+              <p class="lvtag gold">All levels unlocked</p>
+              <h3 class="reward-h">Community Event Complete</h3>
+              <p class="rdesc" id="doneText"></p>
+              <ul class="stats">
+                <li><b id="statBits">0</b><span>Bits contributed</span></li>
+                <li><b id="statRewards">0</b><span>Rewards unlocked</span></li>
+                <li><b id="statVotes">0</b><span>Free votes cast</span></li>
+              </ul>
+              <ol class="recap" id="recap" aria-label="Rewards unlocked"></ol>
+            </div>
+
+            <button class="cta" id="cta" type="button" data-mode="contribute"><svg class="gem" aria-hidden="true"><use href="#gem"/></svg><span id="ctaLabel">Contribute Bits</span></button>
+            <button class="btn" type="button" id="tipBtn" hidden>Add a thank-you tip (bonus pool)</button>
+            <p class="contrib-h">Top contributors</p>
+            <ol class="top3" id="top3"></ol>
+          </div>
+        </div>
+      </section>
+
+      <section class="poll" id="pollSec" aria-labelledby="pollQ">
+        <div class="p-head">
+          <div class="p-titles">
+            <p class="eyebrow">Community vote <span class="free">Free for everyone</span></p>
+            <h3 id="pollQ"></h3>
+            <p class="u-sub" id="pollLink"></p>
+          </div>
+          <span class="pstatus open" id="pStatus"></span>
+        </div>
+        <div class="opts" id="opts"></div>
+        <div class="pwin" id="pwin" hidden></div>
+        <div class="p-foot">
+          <span id="pTotal"></span>
+          <button class="btn small" type="button" id="reopenPoll">Reopen poll (prototype)</button>
+        </div>
+      </section>
+
+    </div>
+
+    <aside class="chat" aria-label="Stream chat">
+      <div class="chat-h">Stream Chat</div>
+      <div class="chat-list" id="chatList" role="log" aria-live="off"></div>
+      <form class="chat-form" id="chatForm">
+        <input type="text" id="chatInput" maxlength="200" placeholder="Send a message" aria-label="Chat message" autocomplete="off">
+        <button type="submit">Chat</button>
+      </form>
+    </aside>
+  </main>
+</div>
+
+<!-- contribute dialog -->
+<dialog class="dlg" id="contribDlg" aria-labelledby="cTitle">
+  <div class="dlg-in">
+    <div class="dlg-h">
+      <div>
+        <h3 id="cTitle">Contribute Bits</h3>
+        <p id="cSub">Unlocking the next reward</p>
+      </div>
+      <button class="x" type="button" id="cClose" aria-label="Close"><svg width="14" height="14" viewBox="0 0 14 14"><path d="M2 2l10 10M12 2L2 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button>
+    </div>
+    <div class="amts" id="amts">
+      <button class="amt" type="button" data-amt="100" aria-pressed="false"><svg class="gem" aria-hidden="true"><use href="#gem"/></svg>100</button>
+      <button class="amt" type="button" data-amt="500" aria-pressed="true"><svg class="gem" aria-hidden="true"><use href="#gem"/></svg>500</button>
+      <button class="amt" type="button" data-amt="1000" aria-pressed="false"><svg class="gem" aria-hidden="true"><use href="#gem"/></svg>1,000</button>
+      <button class="amt" type="button" data-amt="2500" aria-pressed="false"><svg class="gem" aria-hidden="true"><use href="#gem"/></svg>2,500</button>
+    </div>
+    <div class="field">
+      <label for="customAmt">Custom amount</label>
+      <input type="number" id="customAmt" min="1" step="1" inputmode="numeric" placeholder="Enter Bits">
+    </div>
+    <div class="sum">
+      <div><span>You contribute</span><b id="sumAmt">500 Bits</b></div>
+      <div><span>Community progress</span><b id="sumPct">0% to 5%</b></div>
+      <div><span>Your balance after</span><b id="sumBal">12,000 Bits</b></div>
+    </div>
+    <p class="note" id="cNote"></p>
+    <div class="dlg-actions">
+      <button class="btn" type="button" id="cCancel">Cancel</button>
+      <button class="btn primary" type="button" id="cConfirm">Confirm 500 Bits</button>
+    </div>
+  </div>
+</dialog>
+
+<!-- reward dialog -->
+<dialog class="dlg" id="rewardDlg" aria-labelledby="rdTitle">
+  <div class="dlg-in">
+    <div class="dlg-h">
+      <div>
+        <h3 id="rdTitle">Reward</h3>
+        <p id="rdMeta"></p>
+      </div>
+      <button class="x" type="button" id="rClose" aria-label="Close"><svg width="14" height="14" viewBox="0 0 14 14"><path d="M2 2l10 10M12 2L2 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button>
+    </div>
+    <div class="reward-stage" id="rdStage">
+      <svg viewBox="0 0 300 300" role="img" aria-label="Reward illustration"><use id="rdArt" href="#art-challenge"/></svg>
+    </div>
+    <p class="rd-status" id="rdStatus"></p>
+    <p class="rdesc" id="rdDesc"></p>
+    <div class="pick" id="rdPick" hidden></div>
+    <div class="dlg-actions">
+      <button class="btn primary" type="button" id="rDone" style="grid-column: 1 / -1">Close</button>
+    </div>
+  </div>
+</dialog>
+
+<dialog class="dlg wide" id="customDlg" aria-labelledby="edHeading">
+  <div class="dlg-in">
+    <div class="dlg-h">
+      <div>
+        <h3 id="edHeading">Customize Event</h3>
+        <p>Streamer controls. Changes appear on the stream as soon as you save.</p>
+      </div>
+      <button class="x" type="button" id="edClose" aria-label="Close"><svg width="14" height="14" viewBox="0 0 14 14"><path d="M2 2l10 10M12 2L2 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button>
+    </div>
+    <div class="ed-body" id="edBody"></div>
+    <p class="note" id="edNote" role="alert"></p>
+    <div class="dlg-actions ed-actions">
+      <button class="btn" type="button" id="edDefaults">Restore defaults</button>
+      <button class="btn" type="button" id="edCancel">Cancel</button>
+      <button class="btn primary" type="button" id="edSave">Save changes</button>
+    </div>
+  </div>
+</dialog>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+(function () {
+  'use strict';
+  var START_BALANCE = 12500, RING = 2 * Math.PI * 40, POLL_SECS = 180;
+  var reduce = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+  var $ = function (id) { return document.getElementById(id); };
+  var fmt = function (n) { return Math.round(n).toLocaleString('en-US'); };
+  var rand = function (a, b) { return a + Math.random() * (b - a); };
+  var pick = function (a) { return a[Math.floor(Math.random() * a.length)]; };
+  function esc(s) {
+    return String(s).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+  function clone(o) { return JSON.parse(JSON.stringify(o)); }
+  function mmss(s) { return Math.floor(s / 60) + ':' + ('0' + (s % 60)).slice(-2); }
+
+  /* ---------- reward catalogue ---------- */
+  var CATS = [
+    { k: 'challenge', label: 'Community-voted challenge', art: 'challenge' },
+    { k: 'game', label: 'Game or game mode selection', art: 'gamepad' },
+    { k: 'activity', label: 'Interactive stream experience', art: 'vote' },
+    { k: 'effect', label: 'Stream effect, sound or celebration', art: 'burst' },
+    { k: 'recognition', label: 'Community recognition', art: 'trophy' },
+    { k: 'collab', label: 'Collaborative project', art: 'mural' },
+    { k: 'custom', label: 'Custom reward defined by the streamer', art: 'gift' }
+  ];
+  var ARTS = [
+    ['auto', 'Match the category'], ['challenge', 'Challenge shield'], ['gamepad', 'Game controller'],
+    ['vote', 'Poll ballot'], ['burst', 'Fireworks'], ['trophy', 'Trophy'], ['mural', 'Mural'], ['gift', 'Gift box']
+  ];
+  var COMPLETION = [
+    ['recap', 'Show the Community Event Complete recap and stop'],
+    ['bonus', 'Show the recap and keep a thank-you tip pool open']
+  ];
+
+  function defaults() {
+    return {
+      title: 'Community Reward Run',
+      desc: 'Climb four reward levels together. Bits move the community forward and everyone can vote on the challenges for free.',
+      completion: 'recap',
+      levels: [
+        { name: 'Warm-Up', goal: 2000, rTitle: 'Unlock a community poll', cat: 'activity', visual: 'vote',
+          rDesc: 'Chat gets a bonus poll to pick the next break-time activity, and the winner happens on stream right away.' },
+        { name: 'Community Challenge', goal: 5000, rTitle: 'Streamer Completes the Viewer-Chosen Challenge', cat: 'challenge', visual: 'auto',
+          rDesc: 'Chat votes on a restriction and Luna plays the winning challenge live, no retries.' },
+        { name: 'Chat Takes Control', goal: 10000, rTitle: 'Viewers pick the next game and mode', cat: 'game', visual: 'auto',
+          rDesc: 'Chat votes on the game and mode for the next hour of the stream. Luna hands over the controls.' },
+        { name: 'Grand Finale', goal: 20000, rTitle: 'Community game night', cat: 'activity', visual: 'trophy',
+          rDesc: 'A multiplayer session with viewers, a final challenge chosen by chat, and a recap of the funniest moments of the event.' }
+      ],
+      poll: {
+        level: 1,
+        question: 'What should Luna do when we reach Level 2?',
+        options: [
+          { t: 'Play with inverted controls', d: 'Up is down and left is right for the whole challenge.' },
+          { t: 'Complete a no-healing challenge', d: 'Every hit counts. No potions, no regen, no mercy.' },
+          { t: 'Let chat choose the next character', d: 'Chat picks the character and Luna commits to it.' }
+        ]
+      }
+    };
+  }
+
+  /* ---------- state ---------- */
+  var cfg = defaults();
+  var PV0 = [388, 462, 297];
+  var S = { level: 1, bits: 3200, bonus: 0, balance: START_BALANCE, contributors: {}, sim: false };
+  var D = { level: 1, frac: 3200 / 5000, hold: false };   // what is shown on screen, easing toward S
+  var P = { votes: PV0.slice(), mine: -1, open: true, secs: POLL_SECS };
+  var earnedIdx = -1, holdTimer = 0, lastKey = '', draft = null, raf = 0, running = false, last = 0;
+
+  var E = {};
+  ['unlock', 'eventEyebrow', 'unlockTitle', 'eventDesc', 'statusPill', 'customizeBtn', 'track', 'earned', 'stage', 'stageSvg',
+   'stageArt', 'aura', 'stageBadge', 'infoActive', 'lvTag', 'rewardH', 'catChip',
+   'rewardD', 'pick', 'bitsNow', 'bitsGoal', 'pct', 'bar', 'fill', 'remText', 'msg', 'infoDone', 'doneText', 'statBits',
+   'statRewards', 'statVotes', 'recap', 'cta', 'ctaLabel', 'tipBtn', 'top3', 'pollSec', 'pollQ', 'pollLink', 'pStatus', 'opts',
+   'pwin', 'pTotal', 'reopenPoll', 'hud', 'hudPct', 'hudRing', 'hudLevel', 'hudBits', 'hudNext', 'player', 'chTitle',
+   'balance', 'chatList', 'toast', 'devJump', 'devSlider', 'devSliderOut', 'rewardDlg', 'customDlg', 'contribDlg', 'edBody', 'edNote'
+  ].forEach(function (id) { E[id] = $(id); });
+
+  /* ---------- helpers on the event ---------- */
+  function N() { return cfg.levels.length; }
+  function goal(i) { return cfg.levels[i].goal; }
+  function sumBefore(l) { var s = 0; for (var i = 0; i < l && i < N(); i++) s += goal(i); return s; }
+  function totalGoal() { return sumBefore(N()); }
+  function overallBits() { return S.level >= N() ? totalGoal() : sumBefore(S.level) + S.bits; }
+  function remainingAll() { return totalGoal() - overallBits(); }
+  function catOf(i) { var k = cfg.levels[i].cat; return CATS.filter(function (c) { return c.k === k; })[0] || CATS[8]; }
+  function artKey(i) { var v = cfg.levels[i].visual; return (!v || v === 'auto') ? catOf(i).art : v; }
+  function artRef(i) { return '#art-' + artKey(i); }
+  function linked(i) { return cfg.poll.level === i; }
+  function pollTotal() { return P.votes.reduce(function (a, b) { return a + b; }, 0); }
+  function winner() { var w = 0; P.votes.forEach(function (v, i) { if (v > P.votes[w]) w = i; }); return w; }
+  function winPct() { var t = pollTotal(); return t ? Math.round(P.votes[winner()] / t * 100) : 0; }
+  function shortReward(i) {
+    if (linked(i)) return P.open ? 'Chat is voting now' : cfg.poll.options[winner()].t;
+    return cfg.levels[i].rTitle;
+  }
+  function fullReward(i) {
+    var t = cfg.levels[i].rTitle;
+    if (linked(i) && !P.open) return t + ': ' + cfg.poll.options[winner()].t;
+    return t;
+  }
+  function stOf(i) { return (i < D.level || (i === D.level && D.hold)) ? 'done' : (i === D.level ? 'active' : 'locked'); }
+  var CHECK = '<svg viewBox="0 0 12 12" aria-hidden="true"><path d="M2 6.5l2.6 2.6L10 3.4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  var LOCK = '<svg viewBox="0 0 12 12" aria-hidden="true"><rect x="2" y="5.5" width="8" height="5.5" rx="1.5" fill="currentColor"/><path d="M4 5.5V4a2 2 0 014 0v1.5" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>';
+  function artSvg(i, cls) { return '<svg class="' + (cls || '') + '" viewBox="0 0 300 300" aria-hidden="true"><use href="' + artRef(i) + '"/></svg>'; }
+
+  /* ---------- chat ---------- */
+  var VIEWERS = [
+    { n: 'ByteBard', c: '#7ee0a1', b: 'mod' }, { n: 'Mika_Plays', c: '#c79bff', b: 'sub' },
+    { n: 'noodlecat', c: '#ff9f5a' }, { n: 'priya_k', c: '#6fb7ff', b: 'sub' },
+    { n: 'Dex', c: '#f5c451' }, { n: 'Alex', c: '#ff7a90' }, { n: 'tomatoJoe', c: '#5eead4' },
+    { n: 'quietfox', c: '#f472b6', b: 'sub' }, { n: 'Rowan', c: '#9bd0ff' }, { n: 'sunnyside', c: '#ffc27a' }
+  ];
+  var IDLE = [
+    'voting is free, go pick one below the stream', 'I have zero bits but I voted, love that', 'the level track is so clean',
+    'no healing is going to be brutal', 'inverted controls would be hilarious', 'how close are we to the next level',
+    'cannot wait to see what the final level unlocks', 'the corner tracker makes it easy to see how close we are',
+    'every bit moves the whole community forward', 'first event I have seen where chat actually decides things',
+    'W stream', 'chat remember to hydrate', 'LUNA your setup looks incredible today', 'I am here for level 4'
+  ];
+  var REACT = {
+    25: ['a quarter of the way there', '25% already, nice'],
+    50: ['halfway chat, keep going', '50%!! so close'],
+    80: ['we are so close', 'ALMOST THERE', 'one more push']
+  };
+  var UNLOCK_REACT = ['LETS GOOOO', 'THE COMMUNITY DID IT', 'that was fast', 'what is next', 'thank you everyone who gave bits'];
+
+  function addLine(node) {
+    var L = E.chatList;
+    var atBottom = L.scrollHeight - L.scrollTop - L.clientHeight < 90;
+    L.appendChild(node);
+    while (L.children.length > 150) L.removeChild(L.firstChild);
+    if (atBottom) L.scrollTop = L.scrollHeight;
+  }
+  function addChat(user, text) {
+    var d = document.createElement('div');
+    d.className = 'line';
+    if (user.b) {
+      var b = document.createElement('span');
+      b.className = 'badge ' + user.b; b.textContent = user.b === 'mod' ? 'M' : 'S';
+      b.title = user.b === 'mod' ? 'Moderator' : 'Subscriber';
+      d.appendChild(b);
+    }
+    var u = document.createElement('span'); u.className = 'u'; u.style.color = user.c; u.textContent = user.n;
+    d.appendChild(u);
+    d.appendChild(document.createTextNode(': ' + text));
+    addLine(d);
+  }
+  function addCheer(name, amt, you) {
+    var d = document.createElement('div');
+    d.className = 'line cheer';
+    var g = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    g.setAttribute('class', 'gem'); g.setAttribute('aria-hidden', 'true');
+    var u = document.createElementNS('http://www.w3.org/2000/svg', 'use');
+    u.setAttribute('href', '#gem'); g.appendChild(u);
+    var nm = document.createElement('span'); nm.className = 'u'; nm.textContent = name;
+    nm.style.color = you ? '#c79bff' : (VIEWERS.filter(function (v) { return v.n === name; })[0] || { c: '#c79bff' }).c;
+    d.appendChild(g); d.appendChild(nm);
+    d.appendChild(document.createTextNode(' contributed ' + fmt(amt) + ' Bits!'));
+    addLine(d);
+  }
+  function addNotice(text, kind) {
+    var d = document.createElement('div');
+    d.className = 'line notice' + (kind ? ' ' + kind : '');
+    d.textContent = text;
+    addLine(d);
+  }
+  function reactions(arr) {
+    arr.forEach(function (t, i) {
+      setTimeout(function () { addChat(pick(VIEWERS), t); }, 500 + i * rand(500, 1100));
+    });
+  }
+  function chatter() {
+    if (!document.hidden) addChat(pick(VIEWERS), pick(IDLE));
+    setTimeout(chatter, rand(2600, 5400));
+  }
+
+  /* ---------- toast + effects ---------- */
+  var toastT = 0;
+  function toast(text) {
+    E.toast.textContent = text;
+    E.toast.classList.add('show');
+    clearTimeout(toastT);
+    toastT = setTimeout(function () { E.toast.classList.remove('show'); }, 3600);
+  }
+  function floatPlus(amt) {
+    if (reduce) return;
+    var s = document.createElement('span');
+    s.className = 'plus'; s.textContent = '+' + fmt(amt);
+    E.stage.appendChild(s);
+    setTimeout(function () { s.remove(); }, 1600);
+  }
+  function sparks(count) {
+    if (reduce) return;
+    var colors = ['#ffe08a', '#f5c451', '#b48aff', '#ffffff', '#9146ff'];
+    for (var i = 0; i < count; i++) {
+      var sp = document.createElement('span');
+      var ang = Math.random() * Math.PI * 2, dist = rand(70, 150);
+      sp.className = 'spark';
+      sp.style.setProperty('--dx', Math.cos(ang) * dist + 'px');
+      sp.style.setProperty('--dy', Math.sin(ang) * dist + 'px');
+      sp.style.setProperty('--s', rand(9, 20) + 'px');
+      sp.style.setProperty('--d', rand(0, 0.35) + 's');
+      sp.style.setProperty('--c', pick(colors));
+      E.stage.appendChild(sp);
+      (function (el) { setTimeout(function () { el.remove(); }, 2200); })(sp);
+    }
+  }
+  function celebrate(i, final) {
+    E.stage.classList.remove('celebrate');
+    void E.stage.offsetWidth;
+    E.stage.classList.add('celebrate');
+    setTimeout(function () { E.stage.classList.remove('celebrate'); }, 1800);
+    E.hud.classList.remove('pop'); void E.hud.offsetWidth; E.hud.classList.add('pop');
+    setTimeout(function () { E.hud.classList.remove('pop'); }, 1600);
+    sparks(final ? 56 : 30);
+    E.stageBadge.textContent = final ? 'Event complete!' : 'Level ' + (i + 1) + ' unlocked!';
+    E.stage.classList.add('badge-on');
+    earnedIdx = i;
+    renderEarned();
+    renderTrack(true);
+    var L = cfg.levels[i];
+    addNotice('Level ' + (i + 1) + ' unlocked: ' + fullReward(i), 'gold');
+    if (final) addNotice('Community Event Complete: ' + cfg.title, 'gold');
+    reactions(UNLOCK_REACT);
+    toast(final ? 'Community Event Complete! Every reward is unlocked.' : 'Level ' + (i + 1) + ' unlocked: ' + L.rTitle);
+  }
+
+  /* ---------- rendering ---------- */
+  function setMask(a, b, e1, e2, p) {
+    var W = 292 - 272 * p;
+    a.setAttribute('y', W); a.setAttribute('height', 300 - W); b.setAttribute('y', W - 24);
+    if (e1) {
+      var scan = p > 0.003 && p < 0.997;
+      e1.setAttribute('y', W - 13); e2.setAttribute('y', W - 15);
+      e1.style.opacity = scan ? 1 : 0; e2.style.opacity = scan ? 1 : 0;
+    }
+  }
+
+  function frame() {
+    var n = N(), done = D.level >= n;
+    var idx = done ? n - 1 : D.level;
+    var g = goal(idx);
+    var f = done ? 1 : Math.max(0, Math.min(1, D.frac));
+    var shown = f >= 1 ? g : Math.min(g - 1, Math.round(f * g));
+    var pc = f >= 1 ? 100 : Math.floor(f * 100);
+    E.hudRing.style.strokeDashoffset = (RING * (1 - f)).toFixed(2);
+    E.aura.style.opacity = (0.25 + 0.45 * f).toFixed(2);
+    E.fill.style.width = (f * 100) + '%';
+    E.bitsNow.textContent = fmt(shown);
+    E.pct.textContent = pc + '%';
+    E.bar.setAttribute('aria-valuenow', pc);
+    E.remText.textContent = (done || D.hold) ? 'Level ' + (idx + 1) + ' goal reached: ' + fmt(g) + ' Bits' : fmt(g - shown) + ' Bits to go';
+    E.hudPct.textContent = pc + '%';
+    E.hudLevel.textContent = done ? 'Event complete' : 'Level ' + (idx + 1) + ' of ' + n;
+    E.hudBits.textContent = fmt(shown) + ' / ' + fmt(g) + ' Bits';
+    E.hudNext.textContent = done ? 'Every reward unlocked' : 'Next: ' + shortReward(idx);
+    var lf = $('lvFill'); if (lf) lf.style.width = (f * 100) + '%';
+    if (document.activeElement !== E.devSlider) E.devSlider.value = Math.min(99, pc);
+    E.devSliderOut.textContent = Math.min(99, pc) + '%';
+
+    var st = (done || D.hold) ? 'complete' : f >= 0.8 ? 'almost' : f >= 0.1 ? 'progress' : 'locked';
+    var key = st + '|' + D.level + '|' + D.hold + '|' + done;
+    if (key !== lastKey) {
+      lastKey = key;
+      E.unlock.setAttribute('data-state', st);
+      var msgs = {
+        locked: 'Help unlock this reward. ' + fmt(g) + ' Bits unlock Level ' + (idx + 1) + '.',
+        progress: 'The community is getting closer!',
+        almost: 'Almost there! Just a little more to unlock this reward.',
+        complete: done ? 'The community finished every level. Thanks for being part of it.' : 'Level ' + (idx + 1) + ' unlocked! ' + fullReward(idx)
+      };
+      var pills = { locked: 'Locked', progress: 'In progress', almost: 'Almost there', complete: done ? 'Event complete' : 'Level unlocked' };
+      E.msg.textContent = msgs[st];
+      E.statusPill.textContent = pills[st];
+      E.hud.classList.toggle('done', done);
+      E.hud.setAttribute('aria-label', done ? 'Community event complete. Jump to the reward panel' :
+        'Community reward run, level ' + (D.level + 1) + ' of ' + n + ', ' + pc + '% of this level. Jump to the reward panel');
+    }
+  }
+
+  function renderTrack(popLast) {
+    var h = '';
+    cfg.levels.forEach(function (L, i) {
+      var st = stOf(i);
+      var badge = st === 'done' ? CHECK : st === 'locked' ? LOCK : (i + 1);
+      var words = st === 'done' ? 'unlocked' : st === 'active' ? 'active' : 'locked';
+      h += '<li class="lvli ' + st + '"><button type="button" class="lv ' + st + (popLast && st === 'done' && i === D.level ? ' pop' : '') + '" data-lv="' + i + '" aria-label="Level ' + (i + 1) + ', ' + esc(L.name) + ', ' + words + '. View reward details">' +
+        '<span class="lv-top"><span class="lv-badge">' + badge + '</span><span class="lv-n">Level ' + (i + 1) + '</span><span class="lv-goal">' + fmt(L.goal) + '</span></span>' +
+        '<span class="lv-art">' + artSvg(i) + '</span>' +
+        '<span class="lv-name">' + esc(L.name) + '</span>' +
+        '<span class="lv-reward" data-short="' + i + '">' + esc(shortReward(i)) + '</span>' +
+        (st === 'active' ? '<span class="lv-bar"><span id="lvFill"></span></span>' : '') +
+        '</button></li>';
+    });
+    E.track.innerHTML = h;
+  }
+  function refreshShort() {
+    Array.prototype.forEach.call(E.track.querySelectorAll('[data-short]'), function (el) {
+      el.textContent = shortReward(+el.getAttribute('data-short'));
+    });
+  }
+
+  function renderEarned() {
+    if (earnedIdx < 0 || earnedIdx >= N()) { E.earned.hidden = true; return; }
+    var i = earnedIdx;
+    E.earned.hidden = false;
+    E.earned.innerHTML = artSvg(i) + '<div class="et"><b>Level ' + (i + 1) + ' reward earned</b><span>' + esc(fullReward(i)) + '</span></div>' +
+      '<button class="x" type="button" data-dismiss="1" aria-label="Dismiss"><svg width="14" height="14" viewBox="0 0 14 14"><path d="M2 2l10 10M12 2L2 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button>';
+  }
+
+  function renderPick() {
+    var i = D.level;
+    if (i >= N() || !linked(i)) { E.pick.hidden = true; return; }
+    E.pick.hidden = false;
+    E.pick.classList.toggle('won', !P.open);
+    if (P.open) {
+      E.pick.innerHTML = '<span>Chat is voting on this reward. Voting is free and needs no Bits.</span><button type="button" class="linkbtn" data-goto="poll">Vote now</button>';
+    } else {
+      E.pick.innerHTML = '<span>Community pick: <b>' + esc(cfg.poll.options[winner()].t) + '</b></span>';
+    }
+  }
+
+  function renderEvent() {
+    E.unlockTitle.textContent = cfg.title;
+    E.eventDesc.textContent = cfg.desc;
+    E.eventEyebrow.textContent = 'Live community event · ' + N() + ' levels';
+    E.chTitle.textContent = cfg.title + ': climb the reward levels, vote for free';
+    var h = '';
+    for (var i = 0; i < N(); i++) h += '<option value="' + i + '">Level ' + (i + 1) + '</option>';
+    E.devJump.innerHTML = h;
+    E.devJump.value = String(Math.min(S.level, N() - 1));
+  }
+
+  function renderLevel() {
+    var n = N(), done = D.level >= n, idx = done ? n - 1 : D.level, L = cfg.levels[idx];
+    E.infoActive.hidden = done; E.infoDone.hidden = !done;
+    var ref = artRef(idx);
+    E.stageArt.setAttribute('href', ref);
+    E.stageSvg.setAttribute('aria-label', 'Reward preview: ' + L.rTitle);
+    if (!done) {
+      E.lvTag.textContent = 'Level ' + (idx + 1) + ' of ' + n + ' · ' + L.name;
+      E.rewardH.textContent = L.rTitle;
+      E.catChip.textContent = catOf(idx).label;
+      E.rewardD.textContent = L.rDesc;
+      E.bitsGoal.textContent = fmt(L.goal);
+      E.bar.setAttribute('aria-label', 'Bits contributed toward Level ' + (idx + 1));
+    } else {
+      E.doneText.textContent = 'The community unlocked all ' + n + ' rewards together with ' + fmt(totalGoal()) + ' Bits' +
+        (S.bonus > 0 ? ' and ' + fmt(S.bonus) + ' bonus Bits' : '') + '. This event will not restart on its own.';
+      E.statBits.textContent = fmt(totalGoal() + S.bonus);
+      E.statRewards.textContent = n;
+      E.statVotes.textContent = fmt(pollTotal());
+      var h = '';
+      cfg.levels.forEach(function (R, i) {
+        h += '<li><button type="button" data-lv="' + i + '">' + artSvg(i, 'ic') + '<span class="rt"><b>Level ' + (i + 1) + '</b> · ' + esc(shortReward(i)) + '</span><span class="ck">' + CHECK + '</span></button></li>';
+      });
+      E.recap.innerHTML = h;
+    }
+    E.cta.setAttribute('data-mode', done ? 'reward' : 'contribute');
+    E.ctaLabel.textContent = done ? 'View Final Reward' : 'Contribute Bits';
+    E.cta.querySelector('.gem').style.display = done ? 'none' : '';
+    E.tipBtn.hidden = !(done && cfg.completion === 'bonus');
+    if (done) { E.stageBadge.textContent = 'Event complete!'; E.stage.classList.add('badge-on'); }
+    else if (!D.hold) { E.stage.classList.remove('badge-on'); }
+    renderTrack(false);
+    renderPick();
+    renderEarned();
+    lastKey = '';
+    frame();
+  }
+
+  /* ---------- progress animation ---------- */
+  function kick() {
+    if (running) return;
+    running = true; last = performance.now();
+    raf = requestAnimationFrame(loop);
+  }
+  function loop(now) {
+    var dt = Math.min(0.1, (now - last) / 1000); last = now;
+    var moving = false;
+    if (!D.hold && D.level < N()) {
+      if (D.level > S.level) {
+        D.level = S.level; D.frac = S.level < N() ? S.bits / goal(S.level) : 1; renderLevel();
+      } else {
+        var target = D.level < S.level ? 1 : S.bits / goal(D.level);
+        var diff = target - D.frac;
+        if (Math.abs(diff) > 0.0004) {
+          var step = reduce ? diff : diff * (1 - Math.exp(-dt * 5));
+          var minStep = dt * 0.14;
+          if (!reduce && Math.abs(step) < minStep) step = (diff > 0 ? 1 : -1) * Math.min(Math.abs(diff), minStep);
+          D.frac += step; moving = true;
+          if (D.level < S.level && D.frac >= 0.9995) D.frac = 1;
+        } else { D.frac = target; }
+        if (D.level < S.level && D.frac >= 1) startHold();
+      }
+    }
+    frame();
+    if (moving || D.hold) { raf = requestAnimationFrame(loop); } else { running = false; }
+  }
+  function startHold() {
+    D.hold = true;
+    var i = D.level, final = (i === N() - 1);
+    lastKey = '';
+    celebrate(i, final);
+    holdTimer = setTimeout(function () {
+      holdTimer = 0; D.hold = false; D.level++; D.frac = 0;
+      if (!final) E.stage.classList.remove('badge-on');
+      renderLevel();
+      kick();
+    }, reduce ? 700 : final ? 2200 : 1900);
+  }
+  function snap() {
+    clearTimeout(holdTimer); holdTimer = 0; D.hold = false;
+    D.level = S.level; D.frac = S.level < N() ? S.bits / goal(S.level) : 1;
+    E.stage.classList.remove('badge-on');
+    earnedIdx = -1;
+    renderLevel();
+    E.devJump.value = String(Math.min(S.level, N() - 1));
+  }
+
+  /* ---------- contributions ---------- */
+  function addBits(amount) {
+    var rem = Math.min(amount, remainingAll());
+    if (rem <= 0) return 0;
+    var applied = rem, startLevel = S.level, before = S.bits / goal(S.level);
+    while (rem > 0 && S.level < N()) {
+      var room = goal(S.level) - S.bits;
+      if (rem >= room) {
+        rem -= room;
+        if (cfg.poll.level === S.level && P.open) closePoll();
+        S.level++; S.bits = 0;
+      } else { S.bits += rem; rem = 0; }
+    }
+    if (S.level === startLevel && S.level < N()) {
+      var after = S.bits / goal(S.level);
+      [25, 50, 80].forEach(function (m) {
+        if (before < m / 100 && after >= m / 100) {
+          addNotice('Level ' + (S.level + 1) + ' is ' + m + '% unlocked', '');
+          reactions(REACT[m]);
+        }
+      });
+    }
+    kick();
+    return applied;
+  }
+  function project(amount) {
+    var lvl = S.level, bits = S.bits, cap = Math.min(amount, remainingAll()), rem = cap, doneL = [];
+    while (rem > 0 && lvl < N()) {
+      var room = goal(lvl) - bits;
+      if (rem >= room) { rem -= room; doneL.push(lvl); lvl++; bits = 0; } else { bits += rem; rem = 0; }
+    }
+    return { done: doneL, lvl: lvl, bits: bits, applied: cap };
+  }
+
+  var SHARES = [['ByteBard', 0.38], ['Mika_Plays', 0.27], ['noodlecat', 0.2], ['priya_k', 0.15]];
+  function seedContributors(total) {
+    S.contributors = {};
+    if (total > 0) SHARES.forEach(function (s) { S.contributors[s[0]] = Math.round(total * s[1]); });
+    renderContributors();
+  }
+  function renderContributors() {
+    var rows = Object.keys(S.contributors).map(function (k) { return [k, S.contributors[k]]; })
+      .sort(function (a, b) { return b[1] - a[1]; }).slice(0, 3);
+    E.top3.innerHTML = '';
+    if (!rows.length) {
+      var li = document.createElement('li');
+      li.className = 'empty'; li.textContent = 'No contributions yet. Be the first.';
+      E.top3.appendChild(li); return;
+    }
+    rows.forEach(function (r, i) {
+      var li = document.createElement('li');
+      var rk = document.createElement('span'); rk.className = 'rank'; rk.textContent = i + 1;
+      var nm = document.createElement('span'); nm.textContent = r[0];
+      var am = document.createElement('span'); am.className = 'amt-t';
+      am.innerHTML = '<svg class="gem" aria-hidden="true"><use href="#gem"/></svg>';
+      am.appendChild(document.createTextNode(fmt(r[1])));
+      li.appendChild(rk); li.appendChild(nm); li.appendChild(am);
+      E.top3.appendChild(li);
+    });
+  }
+  function updateBalance() { E.balance.textContent = fmt(S.balance); }
+
+  function contribute(name, amount, you) {
+    var applied;
+    if (S.level >= N()) {
+      if (cfg.completion !== 'bonus') return 0;
+      S.bonus += amount; applied = amount; E.statBits.textContent = fmt(totalGoal() + S.bonus);
+    } else {
+      applied = addBits(amount);
+    }
+    if (applied <= 0) return 0;
+    if (you) { S.balance -= applied; updateBalance(); }
+    S.contributors[name] = (S.contributors[name] || 0) + applied;
+    renderContributors();
+    addCheer(name, applied, you);
+    floatPlus(applied);
+    if (you) {
+      if (S.level >= N() && !D.hold && D.level >= N()) toast('Thank you! Your tip went into the bonus pool.');
+      else toast('You contributed ' + fmt(applied) + ' Bits to Level ' + (Math.min(S.level, N() - 1) + 1) + '.');
+    }
+    return applied;
+  }
+
+  /* ---------- contribute dialog ---------- */
+  var dlg = E.contribDlg, sel = 500;
+  function refreshModal() {
+    var done = S.level >= N();
+    var pr = project(sel);
+    var note = $('cNote');
+    note.className = 'note';
+    var ok = sel >= 1 && sel <= S.balance;
+    $('cSub').textContent = done ? 'The event is complete. Tips go to the bonus pool.' :
+      'Level ' + (S.level + 1) + ' of ' + N() + ': ' + cfg.levels[S.level].rTitle;
+    $('sumAmt').textContent = fmt(done ? sel : pr.applied) + ' Bits';
+    var gl = done ? 0 : goal(S.level);
+    if (done) { $('sumPct').textContent = 'Bonus pool'; }
+    else if (!pr.done.length) {
+      $('sumPct').textContent = 'Level ' + (S.level + 1) + ': ' + Math.floor(S.bits / gl * 100) + '% to ' + Math.floor(pr.bits / gl * 100) + '%';
+    } else {
+      var names = pr.done.map(function (i) { return 'Level ' + (i + 1); }).join(' and ');
+      $('sumPct').textContent = 'Unlocks ' + names + (pr.lvl < N() ? ', then Level ' + (pr.lvl + 1) + ' at ' + Math.floor(pr.bits / goal(pr.lvl) * 100) + '%' : ' and finishes the event');
+    }
+    $('sumBal').textContent = fmt(S.balance - (ok ? (done ? sel : pr.applied) : 0)) + ' Bits';
+    if (sel < 1) note.textContent = 'Choose or enter an amount to contribute.';
+    else if (sel > S.balance) { note.textContent = 'You only have ' + fmt(S.balance) + ' Bits. Pick a smaller amount.'; note.className = 'note err'; }
+    else if (!done && sel > pr.applied) note.textContent = 'Only ' + fmt(pr.applied) + ' Bits are needed to finish the event, so that is all we will use.';
+    else if (!done && pr.done.length && pr.lvl < N() && pr.bits > 0) note.textContent = 'The extra ' + fmt(pr.bits) + ' Bits carry over into Level ' + (pr.lvl + 1) + '.';
+    else note.textContent = '';
+    $('cConfirm').disabled = !ok;
+    $('cConfirm').textContent = ok ? 'Confirm ' + fmt(done ? sel : pr.applied) + ' Bits' : 'Confirm';
+    Array.prototype.forEach.call($('amts').querySelectorAll('.amt'), function (b) {
+      var v = +b.getAttribute('data-amt');
+      b.disabled = v > S.balance;
+      b.setAttribute('aria-pressed', (!$('customAmt').value && v === sel) ? 'true' : 'false');
+    });
+  }
+  function openContribute() {
+    if (S.level >= N() && cfg.completion !== 'bonus') { toast('The event is complete. Every level is unlocked.'); return; }
+    sel = [500, 100].filter(function (v) { return v <= S.balance; })[0] || 0;
+    $('customAmt').value = '';
+    refreshModal();
+    dlg.showModal();
+  }
+  $('amts').addEventListener('click', function (e) {
+    var b = e.target.closest('.amt');
+    if (!b || b.disabled) return;
+    sel = +b.getAttribute('data-amt'); $('customAmt').value = ''; refreshModal();
+  });
+  $('customAmt').addEventListener('input', function () {
+    var v = Math.floor(Number(this.value));
+    sel = isFinite(v) && v > 0 ? v : 0; refreshModal();
+  });
+  $('cConfirm').addEventListener('click', function () {
+    if (sel < 1 || sel > S.balance) return;
+    var amt = sel; dlg.close(); contribute('You', amt, true);
+  });
+  $('cCancel').addEventListener('click', function () { dlg.close(); });
+  $('cClose').addEventListener('click', function () { dlg.close(); });
+  dlg.addEventListener('click', function (e) { if (e.target === dlg) dlg.close(); });
+
+  /* ---------- poll ---------- */
+  var TINTS = ['#9146ff', '#3ddc97', '#ff6ba8'];
+  function buildPoll() {
+    var pl = cfg.poll, show = pl.level >= 0 && pl.level < N();
+    E.pollSec.hidden = !show;
+    if (!show) return;
+    E.pollQ.textContent = pl.question;
+    E.pollLink.textContent = 'The winning choice becomes part of the Level ' + (pl.level + 1) + ' reward (' + cfg.levels[pl.level].name + '). Voting is free and never needs Bits.';
+    var h = '';
+    pl.options.forEach(function (o, i) {
+      h += '<article class="opt" style="--oc:' + TINTS[i] + '"><div class="opt-top"><span class="opt-l">' + 'ABC'.charAt(i) + '</span><h4>' + esc(o.t) + '</h4></div>' +
+        '<p>' + esc(o.d) + '</p><div class="opt-res"><b class="opt-pct">0%</b><span class="opt-n">0 votes</span></div>' +
+        '<div class="opt-bar"><span></span></div><span class="opt-win">Winner</span>' +
+        '<button type="button" class="vote-btn" data-vote="' + i + '">Vote</button></article>';
+    });
+    E.opts.innerHTML = h;
+    updatePoll();
+  }
+  function updatePoll() {
+    if (E.pollSec.hidden) return;
+    var total = pollTotal(), w = winner(), pl = cfg.poll;
+    E.pStatus.className = 'pstatus ' + (P.open ? 'open' : 'closed');
+    E.pStatus.innerHTML = P.open ? '<span class="dot"></span>Voting open · ' + mmss(P.secs) + ' left' : 'Voting closed';
+    Array.prototype.forEach.call(E.opts.children, function (el, i) {
+      var pc = total ? Math.round(P.votes[i] / total * 100) : 0;
+      el.querySelector('.opt-pct').textContent = pc + '%';
+      el.querySelector('.opt-n').textContent = fmt(P.votes[i]) + ' votes';
+      el.querySelector('.opt-bar span').style.width = pc + '%';
+      el.classList.toggle('mine', P.mine === i);
+      el.classList.toggle('win', !P.open && w === i);
+      var b = el.querySelector('.vote-btn');
+      b.disabled = !P.open;
+      b.classList.toggle('on', P.mine === i);
+      b.setAttribute('aria-pressed', P.mine === i ? 'true' : 'false');
+      b.textContent = !P.open ? (P.mine === i ? 'Your vote' : 'Voting closed') : P.mine === i ? 'Your vote ✓' : (P.mine >= 0 ? 'Change vote to this' : 'Vote');
+    });
+    E.pTotal.textContent = fmt(total) + ' votes so far. Everyone can vote, with or without Bits.';
+    if (P.open) { E.pwin.hidden = true; }
+    else {
+      E.pwin.hidden = false;
+      E.pwin.innerHTML = '<b>Winner: ' + esc(pl.options[w].t) + '</b> with ' + winPct() + '% of the vote. ' +
+        (S.level > pl.level ? 'It is part of the unlocked Level ' + (pl.level + 1) + ' reward.' : 'It becomes part of the Level ' + (pl.level + 1) + ' reward when the community unlocks it.');
+    }
+  }
+  function afterPollChange() {
+    updatePoll(); renderPick(); refreshShort(); renderEarned();
+    if (D.level >= N()) renderLevel();
+  }
+  function closePoll() {
+    if (!P.open) return;
+    P.open = false;
+    afterPollChange();
+    if (!E.pollSec.hidden) {
+      var t = cfg.poll.options[winner()].t;
+      addNotice('Voting closed: ' + t + ' wins with ' + winPct() + '%', 'gold');
+      toast('Voting closed. "' + t + '" won and is part of the Level ' + (cfg.poll.level + 1) + ' reward.');
+    }
+  }
+  function openPoll() {
+    P.open = true; P.secs = POLL_SECS;
+    afterPollChange();
+    addNotice('Voting is open again. Vote for free below the stream.', 'sys');
+  }
+  function resetPoll() { P.votes = PV0.slice(); P.mine = -1; openPoll(); }
+  function simulateResult() {
+    var r = Math.floor(Math.random() * 3);
+    P.votes[r] += Math.round(rand(350, 700));
+    P.open = true;
+    closePoll();
+  }
+  function voteFor(i) {
+    if (!P.open || P.mine === i) return;
+    var changed = P.mine >= 0;
+    if (changed) P.votes[P.mine]--;
+    P.votes[i]++; P.mine = i;
+    updatePoll();
+    toast((changed ? 'Vote changed to "' : 'Vote counted: "') + cfg.poll.options[i].t + '". Voting is free.');
+  }
+  var tickN = 0;
+  setInterval(function () {
+    tickN++;
+    if (!P.open || E.pollSec.hidden) return;
+    P.secs--;
+    if (P.secs <= 0) { P.secs = 0; closePoll(); return; }
+    if (tickN % 2 === 0) {
+      var t = pollTotal(), r = Math.random() * t, i = 0, acc = P.votes[0];
+      while (r > acc && i < 2) { i++; acc += P.votes[i]; }
+      P.votes[i] += Math.ceil(rand(1, 4));
+      if (Math.random() < 0.3) addChat(pick(VIEWERS), 'voted for ' + cfg.poll.options[i].t.toLowerCase() + ', free and easy');
+    }
+    updatePoll();
+  }, 1000);
+
+  /* ---------- reward details dialog ---------- */
+  var rdlg = E.rewardDlg, rdIdx = 0;
+  function openReward(i) {
+    rdIdx = i;
+    var L = cfg.levels[i];
+    var st = i < S.level ? 'done' : i === S.level ? 'active' : 'locked';
+    var frac = st === 'done' ? 1 : st === 'active' ? S.bits / goal(i) : 0;
+    $('rdTitle').textContent = L.rTitle;
+    $('rdMeta').textContent = 'Level ' + (i + 1) + ' of ' + N() + ' · ' + L.name + ' · ' + catOf(i).label;
+    $('rdArt').setAttribute('href', artRef(i));
+    $('rdStage').classList.toggle('dim', st === 'locked');
+    $('rdStatus').textContent = st === 'done' ? 'Unlocked by the community' :
+      st === 'active' ? 'In progress: ' + Math.floor(frac * 100) + '% of ' + fmt(L.goal) + ' Bits' :
+      'Locked until Level ' + i + ' is unlocked · ' + fmt(L.goal) + ' Bits';
+    $('rdDesc').textContent = L.rDesc;
+    var pk = $('rdPick');
+    if (linked(i)) {
+      pk.hidden = false; pk.classList.toggle('won', !P.open);
+      pk.innerHTML = P.open ? '<span>Chat is voting on this reward right now. Voting is free.</span>' : '<span>Community pick: <b>' + esc(cfg.poll.options[winner()].t) + '</b></span>';
+    } else { pk.hidden = true; }
+    rdlg.showModal();
+  }
+  $('rClose').addEventListener('click', function () { rdlg.close(); });
+  $('rDone').addEventListener('click', function () { rdlg.close(); });
+  rdlg.addEventListener('click', function (e) { if (e.target === rdlg) rdlg.close(); });
+
+  /* ---------- streamer customization ---------- */
+  var edDlg = E.customDlg;
+  function F(label, id, inner, cls) { return '<div class="field' + (cls ? ' ' + cls : '') + '"><label for="' + id + '">' + label + '</label>' + inner + '</div>'; }
+  function optsHtml(list, selected) {
+    return list.map(function (o) { return '<option value="' + esc(o[0]) + '"' + (o[0] === selected ? ' selected' : '') + '>' + esc(o[1]) + '</option>'; }).join('');
+  }
+  function renderEditor() {
+    var d = draft, n = d.levels.length, h = '';
+    h += '<div class="ed-sec"><h4>Event</h4><div class="form-grid">' +
+      F('Event title', 'edTitle', '<input type="text" id="edTitle" data-ev="title" maxlength="60" value="' + esc(d.title) + '">') +
+      F('Number of levels', 'edCount', '<select id="edCount" data-ev="count">' + [2, 3, 4, 5].map(function (k) { return '<option value="' + k + '"' + (k === n ? ' selected' : '') + '>' + k + ' levels</option>'; }).join('') + '</select>') +
+      F('Event description', 'edDesc', '<textarea id="edDesc" data-ev="desc" rows="2" maxlength="260">' + esc(d.desc) + '</textarea>', 'span2') +
+      F('When the final level is unlocked', 'edDone', '<select id="edDone" data-ev="completion">' + optsHtml(COMPLETION, d.completion) + '</select>', 'span2') +
+      '</div></div><div class="ed-sec"><h4>Levels</h4>';
+    d.levels.forEach(function (L, i) {
+      h += '<details class="lvl-ed"' + (i === 0 ? ' open' : '') + '><summary>Level ' + (i + 1) + ' · ' + esc(L.name) + ' · ' + fmt(Number(L.goal) || 0) + ' Bits</summary><div class="form-grid">' +
+        F('Level name', 'edN' + i, '<input type="text" id="edN' + i + '" data-lv="' + i + '" data-k="name" maxlength="40" value="' + esc(L.name) + '">') +
+        F('Bits goal', 'edG' + i, '<input type="number" id="edG' + i + '" data-lv="' + i + '" data-k="goal" min="100" step="100" inputmode="numeric" value="' + esc(L.goal) + '">') +
+        F('Reward title', 'edT' + i, '<input type="text" id="edT' + i + '" data-lv="' + i + '" data-k="rTitle" maxlength="70" value="' + esc(L.rTitle) + '">', 'span2') +
+        F('Reward description', 'edD' + i, '<textarea id="edD' + i + '" data-lv="' + i + '" data-k="rDesc" rows="2" maxlength="220">' + esc(L.rDesc) + '</textarea>', 'span2') +
+        F('Reward category', 'edC' + i, '<select id="edC' + i + '" data-lv="' + i + '" data-k="cat">' + optsHtml(CATS.map(function (c) { return [c.k, c.label]; }), L.cat) + '</select>') +
+        F('Reward visual (optional)', 'edV' + i, '<select id="edV' + i + '" data-lv="' + i + '" data-k="visual">' + optsHtml(ARTS, L.visual || 'auto') + '</select>') +
+        '</div></details>';
+    });
+    h += '</div><div class="ed-sec"><h4>Community vote</h4><div class="form-grid">' +
+      F('Poll decides the reward for', 'edPL', '<select id="edPL" data-pl="level"><option value="-1"' + (d.poll.level < 0 ? ' selected' : '') + '>No poll</option>' +
+        d.levels.map(function (L, i) { return '<option value="' + i + '"' + (d.poll.level === i ? ' selected' : '') + '>Level ' + (i + 1) + ' · ' + esc(L.name) + '</option>'; }).join('') + '</select>') +
+      F('Poll question', 'edPQ', '<input type="text" id="edPQ" data-pl="question" maxlength="90" value="' + esc(d.poll.question) + '">');
+    d.poll.options.forEach(function (o, i) {
+      h += F('Option ' + 'ABC'.charAt(i) + ' title', 'edOT' + i, '<input type="text" id="edOT' + i + '" data-po="' + i + '" data-k="t" maxlength="60" value="' + esc(o.t) + '">') +
+        F('Option ' + 'ABC'.charAt(i) + ' description', 'edOD' + i, '<input type="text" id="edOD' + i + '" data-po="' + i + '" data-k="d" maxlength="100" value="' + esc(o.d) + '">');
+    });
+    h += '</div></div>';
+    E.edBody.innerHTML = h;
+  }
+  function openEditor() {
+    draft = clone(cfg);
+    E.edNote.textContent = ''; E.edNote.className = 'note';
+    renderEditor();
+    edDlg.showModal();
+  }
+  E.edBody.addEventListener('input', function (e) {
+    var t = e.target, ds = t.dataset;
+    if (ds.ev && ds.ev !== 'count') draft[ds.ev] = t.value;
+    else if (ds.lv !== undefined) draft.levels[+ds.lv][ds.k] = t.value;
+    else if (ds.pl) draft.poll[ds.pl] = ds.pl === 'level' ? parseInt(t.value, 10) : t.value;
+    else if (ds.po !== undefined) draft.poll.options[+ds.po][ds.k] = t.value;
+  });
+  E.edBody.addEventListener('change', function (e) {
+    if (e.target.dataset.ev !== 'count') return;
+    var k = parseInt(e.target.value, 10);
+    while (draft.levels.length < k) {
+      var prev = Number(draft.levels[draft.levels.length - 1].goal) || 1000;
+      draft.levels.push({ name: 'Bonus Level', goal: Math.max(500, Math.round(prev * 1.5 / 500) * 500), rTitle: 'Mystery reward', cat: 'custom', visual: 'auto', rDesc: 'Describe what the community earns at this level.' });
+    }
+    while (draft.levels.length > k) draft.levels.pop();
+    if (draft.poll.level >= k) draft.poll.level = -1;
+    renderEditor();
+  });
+  function saveEditor() {
+    var d = draft, i, g;
+    for (i = 0; i < d.levels.length; i++) {
+      var L = d.levels[i];
+      g = Math.round(Number(L.goal));
+      if (!(g >= 100 && g <= 1000000)) { return editorError('Level ' + (i + 1) + ' needs a Bits goal between 100 and 1,000,000.'); }
+      if (!String(L.rTitle).trim()) { return editorError('Level ' + (i + 1) + ' needs a reward title.'); }
+    }
+    d.levels.forEach(function (L, j) { L.goal = Math.round(Number(L.goal)); L.name = String(L.name).trim() || 'Level ' + (j + 1); L.rTitle = String(L.rTitle).trim(); });
+    d.title = String(d.title).trim() || 'Community Reward Run';
+    d.poll.question = String(d.poll.question).trim() || 'What should the streamer do?';
+    d.poll.options.forEach(function (o, j) { o.t = String(o.t).trim() || 'Option ' + 'ABC'.charAt(j); });
+    applyConfig(d);
+    edDlg.close();
+    toast('Event updated. The stream now shows your changes.');
+  }
+  function editorError(msg) { E.edNote.textContent = msg; E.edNote.className = 'note err'; return false; }
+  function applyConfig(next) {
+    var oldN = N(), wasDone = S.level >= oldN;
+    cfg = clone(next);
+    var n = N();
+    if (cfg.poll.level >= n) cfg.poll.level = -1;
+    if (wasDone) { S.level = n > oldN ? oldN : n; S.bits = 0; }
+    else {
+      if (S.level >= n) S.level = n - 1;
+      S.bits = Math.min(S.bits, goal(S.level) - 1);
+    }
+    if (cfg.poll.level >= 0 && cfg.poll.level < S.level && P.open) P.open = false;
+    renderEvent(); buildPoll(); snap(); seedContributors(overallBits());
+  }
+  $('edSave').addEventListener('click', saveEditor);
+  $('edCancel').addEventListener('click', function () { edDlg.close(); });
+  $('edClose').addEventListener('click', function () { edDlg.close(); });
+  $('edDefaults').addEventListener('click', function () {
+    draft = defaults(); E.edNote.textContent = 'Defaults restored in the form. Save to apply them.'; E.edNote.className = 'note'; renderEditor();
+  });
+  edDlg.addEventListener('click', function (e) { if (e.target === edDlg) edDlg.close(); });
+  E.customizeBtn.addEventListener('click', openEditor);
+
+  /* ---------- wiring ---------- */
+  E.cta.addEventListener('click', function () {
+    if (D.level >= N()) openReward(N() - 1); else openContribute();
+  });
+  E.tipBtn.addEventListener('click', openContribute);
+  E.track.addEventListener('click', function (e) { var b = e.target.closest('[data-lv]'); if (b) openReward(+b.getAttribute('data-lv')); });
+  E.recap.addEventListener('click', function (e) { var b = e.target.closest('[data-lv]'); if (b) openReward(+b.getAttribute('data-lv')); });
+  E.earned.addEventListener('click', function (e) { if (e.target.closest('[data-dismiss]')) { earnedIdx = -1; renderEarned(); } });
+  E.opts.addEventListener('click', function (e) { var b = e.target.closest('[data-vote]'); if (b && !b.disabled) voteFor(+b.getAttribute('data-vote')); });
+  E.pick.addEventListener('click', function (e) {
+    if (e.target.closest('[data-goto]')) E.pollSec.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'start' });
+  });
+  E.hud.addEventListener('click', function () { E.unlock.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'start' }); });
+  var fb = $('follow');
+  fb.addEventListener('click', function () {
+    var on = fb.getAttribute('aria-pressed') !== 'true';
+    fb.setAttribute('aria-pressed', on ? 'true' : 'false');
+    fb.textContent = on ? 'Following' : 'Follow';
+  });
+  $('chatForm').addEventListener('submit', function (e) {
+    e.preventDefault();
+    var inp = $('chatInput'), t = inp.value.trim();
+    if (!t) return;
+    addChat({ n: 'You', c: '#c79bff' }, t);
+    inp.value = '';
+  });
+  E.reopenPoll.addEventListener('click', openPoll);
+
+  /* ---------- prototype controls ---------- */
+  function setLevelProgress(p) {
+    if (S.level >= N()) S.level = N() - 1;
+    S.bits = Math.min(goal(S.level) - 1, Math.round(goal(S.level) * p / 100));
+    snap(); seedContributors(overallBits());
+    addNotice('Prototype: Level ' + (S.level + 1) + ' set to ' + p + '%', 'sys');
+  }
+  function jumpTo(i) {
+    S.level = i; S.bits = 0;
+    if (cfg.poll.level >= 0 && cfg.poll.level < i && P.open) { P.open = false; afterPollChange(); }
+    snap(); seedContributors(overallBits());
+    addNotice('Prototype: jumped to Level ' + (i + 1), 'sys');
+  }
+  $('devReset').addEventListener('click', function () {
+    S.level = 0; S.bits = 0; S.bonus = 0;
+    S.balance = START_BALANCE; updateBalance();
+    P.votes = PV0.slice(); P.mine = -1; P.open = true; P.secs = POLL_SECS;
+    afterPollChange();
+    snap(); seedContributors(0);
+    addNotice('Prototype: event reset to Level 1', 'sys');
+  });
+  $('devJumpGo').addEventListener('click', function () { jumpTo(+E.devJump.value); });
+  $('devCompleteLevel').addEventListener('click', function () {
+    if (S.level >= N()) { toast('The event is already complete.'); return; }
+    contribute(pick(VIEWERS).n, goal(S.level) - S.bits, false);
+  });
+  $('devCompleteEvent').addEventListener('click', function () {
+    if (S.level >= N()) { toast('The event is already complete.'); return; }
+    S.level = N() - 1; S.bits = 0;
+    if (cfg.poll.level >= 0 && cfg.poll.level < S.level && P.open) { P.open = false; afterPollChange(); }
+    snap(); seedContributors(overallBits());
+    contribute(pick(VIEWERS).n, goal(N() - 1), false);
+  });
+  $('devContribute').addEventListener('click', function () {
+    if (S.level >= N()) { toast('The event is already complete.'); return; }
+    contribute(pick(VIEWERS).n, pick([500, 1000, 2000]), false);
+  });
+  Array.prototype.forEach.call(document.querySelectorAll('.chip[data-p]'), function (b) {
+    b.addEventListener('click', function () { setLevelProgress(+b.getAttribute('data-p')); });
+  });
+  E.devSlider.addEventListener('input', function () { setLevelProgress(+E.devSlider.value); });
+  $('devOpen').addEventListener('click', openPoll);
+  $('devClose').addEventListener('click', function () { if (P.open) closePoll(); else toast('Voting is already closed.'); });
+  $('devSim').addEventListener('click', simulateResult);
+  $('devResetPoll').addEventListener('click', resetPoll);
+
+  var simT = 0;
+  function simTick() {
+    if (!S.sim) return;
+    if (S.level < N() || cfg.completion === 'bonus') contribute(pick(VIEWERS).n, pick([100, 100, 200, 500, 500, 1000]), false);
+    simT = setTimeout(simTick, rand(2600, 5600));
+  }
+  $('simToggle').addEventListener('change', function () {
+    S.sim = this.checked; clearTimeout(simT);
+    if (S.sim) simT = setTimeout(simTick, 1200);
+  });
+
+  /* ---------- init ---------- */
+  [
+    [VIEWERS[0], 'welcome in everyone, level 1 is already unlocked and the bonus poll is done'],
+    [VIEWERS[2], 'level 2 is the challenge level, go vote below the stream'],
+    [VIEWERS[1], 'voting is free, you do not need bits to pick the challenge'],
+    [VIEWERS[3], 'LUNA the stream looks so good today'],
+    [VIEWERS[0], 'bits move us to the next level, votes decide what Luna actually does']
+  ].forEach(function (m) { addChat(m[0], m[1]); });
+  addNotice('Level 1 unlocked: ' + cfg.levels[0].rTitle, 'gold');
+  E.chatList.scrollTop = E.chatList.scrollHeight;
+  updateBalance();
+  renderEvent();
+  buildPoll();
+  seedContributors(overallBits());
+  renderLevel();
+  setTimeout(chatter, 2500);
+})();
+</script>
+
+</body></html>
