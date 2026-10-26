@@ -1,10 +1,30 @@
-import { getLevel, liveChallenge } from '../../state/trainReducer.js';
+import { formatTime, getLevel, liveChallenge, maxLevel } from '../../state/climbReducer.js';
 import Icon from '../Icon.jsx';
+
+// The big moments of the climb, shown on the stream itself like a streamer's overlay: the climb
+// is a planned segment, so its milestones are part of the show.
+function Moment({ moment, climb, ladder }) {
+  const level = moment.level && getLevel(ladder, moment.level);
+  const content = {
+    start: { kicker: 'Community Climb', title: `${maxLevel(ladder)} goals · ${formatTime(climb.seconds)}`, line: "Let's climb!" },
+    unlock: { kicker: `🚩 Goal ${moment.level} unlocked`, title: level?.challenge, line: 'The community did it!' },
+    reveal: { kicker: '🎁 Mystery goal revealed', title: level?.challenge, line: 'The final goal' },
+    summit: { kicker: '⛰ Summit!', title: 'Every goal unlocked', line: level?.challenge },
+  }[moment.type];
+
+  return (
+    <div key={moment.key} className={`player-moment player-moment--${moment.type}`} role="status">
+      <span className="player-moment-kicker">{content.kicker}</span>
+      <span className="player-moment-title">{content.title}</span>
+      <span className="player-moment-line">{content.line}</span>
+    </div>
+  );
+}
 
 // The video player, as in the Twitch app. The stream stays the focus: when the streamer starts a
 // challenge, a small lower-third says what's happening.
-export default function StreamArea({ train, ladder }) {
-  const live = liveChallenge(train);
+export default function StreamArea({ climb, ladder }) {
+  const live = liveChallenge(climb);
   const level = live && getLevel(ladder, live);
 
   return (
@@ -27,10 +47,11 @@ export default function StreamArea({ train, ladder }) {
         </button>
       </div>
       <span className="player-live">LIVE</span>
-      {level && (
+      {climb.activeMoment && <Moment moment={climb.activeMoment} climb={climb} ladder={ladder} />}
+      {level && !climb.activeMoment && (
         <div className="player-challenge" role="status">
           <span className="player-challenge-kicker">
-            <span className="live-dot" aria-hidden="true" /> Live challenge · Level {level.level}
+            <span className="live-dot" aria-hidden="true" /> Live challenge · Goal {level.level}
           </span>
           <span className="player-challenge-text">{level.challenge}</span>
         </div>

@@ -2,33 +2,35 @@ import { useState } from 'react';
 import BottomSheet from '../BottomSheet.jsx';
 import ArtTile from '../ArtTile.jsx';
 import Icon from '../Icon.jsx';
-import { HURRY_SECONDS, KICKOFF_NEEDED, STREAMER, SUPPORT_GROUPS, SUPPORT_OPTIONS } from '../../data/train.js';
-import { climbingLevel, formatTime, isHeld, isLive } from '../../state/trainReducer.js';
+import { HURRY_SECONDS, STREAMER, SUPPORT_GROUPS, SUPPORT_OPTIONS } from '../../data/climb.js';
+import { formatTime, isHeld, isHidden, isLive, nextGoal } from '../../state/climbReducer.js';
 
 const ICON = { sub: 'star', gift: 'gift', bits: 'bits' };
 
-// Twitch's Subscribe / Gift Subs / Bits sheet, with what each option does for the train.
-export default function SupportSheet({ train, ladder, dispatch, onClose }) {
-  const [tab, setTab] = useState(train.sheetTab || 'gift');
-  const level = climbingLevel(train, ladder);
-  const live = isLive(train) && level;
-  const pending = SUPPORT_OPTIONS.find((o) => o.id === train.pendingSupport);
+// Twitch's Subscribe / Gift Subs / Bits sheet, with what each option does for the climb.
+export default function SupportSheet({ climb, ladder, dispatch, onClose }) {
+  const [tab, setTab] = useState(climb.sheetTab || 'gift');
+  const level = nextGoal(climb, ladder);
+  const live = isLive(climb) && level;
+  const pending = SUPPORT_OPTIONS.find((o) => o.id === climb.pendingSupport);
 
+  const hidden = live && isHidden(climb, ladder, level);
   const status = !live ? (
-    <div className="sheet-status">The Challenge Train isn't running right now. Your support still shows in chat.</div>
-  ) : train.phase === 'boarding' ? (
     <div className="sheet-status">
-      <Icon name="train" size={16} /> {KICKOFF_NEEDED - train.boarded} more to start the Challenge Train. Yours counts.
+      <Icon name="mountain" size={16} />
+      {climb.phase === 'scheduled'
+        ? `The Community Climb hasn't started yet, so this won't count toward a goal.`
+        : 'The Community Climb is over. Your support still shows in chat.'}
     </div>
   ) : (
-    <div className={`sheet-status${!isHeld(train) && train.timeLeft <= HURRY_SECONDS ? ' sheet-status--hurry' : ''}`}>
-      <Icon name={isHeld(train) ? 'pause' : 'clock'} size={16} /> {formatTime(train.timeLeft)} left to reach Level {level.level}
-      {isHeld(train) && ' (paused for the challenge)'}
+    <div className={`sheet-status${!isHeld(climb) && climb.timeLeft <= HURRY_SECONDS ? ' sheet-status--hurry' : ''}`}>
+      <Icon name={isHeld(climb) ? 'pause' : 'clock'} size={16} /> {formatTime(climb.timeLeft)} left in the climb · next: Goal {level.level}
+      {isHeld(climb) && ' (paused for the challenge)'}
     </div>
   );
 
   if (pending) {
-    const after = train.points + pending.points;
+    const after = climb.points + pending.points;
     return (
       <BottomSheet title="Confirm" onClose={onClose}>
         <div className="confirm">
@@ -40,8 +42,8 @@ export default function SupportSheet({ train, ladder, dispatch, onClose }) {
           {live && (
             <p className="confirm-effect">
               {after >= level.threshold
-                ? `This reaches Level ${level.level}.`
-                : `${(level.threshold - after).toLocaleString()} more to Level ${level.level} after this.`}
+                ? `This unlocks Goal ${level.level}!`
+                : `${(level.threshold - after).toLocaleString()} more to Goal ${level.level} after this.`}
             </p>
           )}
           <div className="proto-label">Prototype: no real payment</div>
@@ -65,15 +67,16 @@ export default function SupportSheet({ train, ladder, dispatch, onClose }) {
         ))}
       </div>
       {status}
-      {live && (
+      {live && !hidden && (
         <div className="sheet-reward">
           <ArtTile art={level.reward.art} kind={level.reward.kind} size={32} gold={level.reward.gold} />
           <span>
-            Support now and earn <b>{level.reward.name}</b> when Level {level.level} unlocks
+            Support now and earn <b>{level.reward.name}</b> when Goal {level.level} unlocks
             {level.reward.credit && <span className="muted"> · art by {level.reward.credit}</span>}
           </span>
         </div>
       )}
+      {hidden && <div className="sheet-reward">Support now to unlock the mystery goal and its secret reward.</div>}
       <p className="sheet-note">{group.note}</p>
       <ul className="option-list">
         {SUPPORT_OPTIONS.filter((o) => o.group === tab).map((o) => (

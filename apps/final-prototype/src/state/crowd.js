@@ -1,4 +1,4 @@
-import { CROWD, CROWD_LINES, CROWD_MIX, CROWD_RATE } from '../data/train.js';
+import { CROWD, CROWD_LINES, CROWD_MIX, CROWD_RATE } from '../data/climb.js';
 
 // The simulated crowd. Picks what other viewers do this second; the reducer applies it.
 // Randomness lives here so the reducers stay pure.
@@ -11,11 +11,13 @@ function pickOption() {
   return CROWD_MIX[0][0];
 }
 
-export function crowdActions(train, outcome) {
+// Before the climb starts the crowd only chats (support wouldn't count yet). During it, the
+// prototype outcome sets how often they support.
+export function crowdActions(climb, outcome) {
   const actions = [];
-  // Boarding fills quickly so the tester isn't left waiting; after that the outcome sets the pace.
-  const rate = train.phase === 'boarding' ? 0.25 : CROWD_RATE[outcome];
-  if (Math.random() < rate) actions.push({ type: 'CROWD_SUPPORT', who: pick(CROWD), optionId: pickOption() });
-  if (Math.random() < 0.3) actions.push({ type: 'CROWD_CHAT', who: pick(CROWD), text: pick(CROWD_LINES[train.phase]) });
+  if (climb.phase === 'live' && Math.random() < CROWD_RATE[outcome]) {
+    actions.push({ type: 'CROWD_SUPPORT', who: pick(CROWD), optionId: pickOption() });
+  }
+  if (Math.random() < 0.25) actions.push({ type: 'CROWD_CHAT', who: pick(CROWD), text: pick(CROWD_LINES[climb.phase]) });
   return actions;
 }

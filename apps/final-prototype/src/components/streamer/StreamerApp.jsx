@@ -1,11 +1,11 @@
-import { STREAMER } from '../../data/train.js';
+import { STREAMER } from '../../data/climb.js';
 import SetupHome from './SetupHome.jsx';
 import LevelEditor from './LevelEditor.jsx';
 import LiveControl from './LiveControl.jsx';
 
 const TABS = [
   { id: 'live', label: 'Stream Manager' },
-  { id: 'setup', label: 'Challenge Train setup' },
+  { id: 'setup', label: 'Climb setup' },
 ];
 
 export default function StreamerApp({ state, dispatch }) {

@@ -9,7 +9,7 @@ hype-train-dreams/
     battle-boss/        Ryanna: Battle Boss poll, mobile          (port 5102)
     avatar-unlock/      Drew: community cosmetic unlock           (port 5103)
     community-reward-run/  Drew: multi-level community reward run (port 5104)
-    final-prototype/    Thejas: Challenge Train, final prototype (port 5105)
+    final-prototype/    Thejas: Community Climb, final prototype (port 5105)
     <your-app>/         one folder per teammate concept
   packages/             shared code, only once two apps need the same thing (empty for now)
   templates/app/        starter used by `npm run new-app`

@@ -1,13 +1,13 @@
 import ArtTile from '../ArtTile.jsx';
-import { STREAMER } from '../../data/train.js';
+import { STREAMER } from '../../data/climb.js';
 import { mySubmissions, openRequests, pickedLevelOf, submissionsFor } from '../../state/reducer.js';
 
 function statusText(state, s) {
-  if (s.status === 'vault') return 'Saved to the vault for a future train';
+  if (s.status === 'vault') return 'Saved to the vault for a future climb';
   if (s.status === 'picked') {
     const picked = pickedLevelOf(state, s.id);
-    if (picked?.live) return `Live in Level ${picked.level}! You're credited when it unlocks.`;
-    if (picked) return `Picked for Level ${picked.level} · goes live when ${STREAMER.name} publishes`;
+    if (picked?.live) return `Live in Goal ${picked.level}! You're credited when it unlocks.`;
+    if (picked) return `Picked for Goal ${picked.level} · goes live when ${STREAMER.name} publishes`;
   }
   return 'Submitted · waiting for mod review';
 }
@@ -19,7 +19,7 @@ export default function FanHome({ state, dispatch }) {
   return (
     <div className="screen-body">
       <p className="screen-intro">
-        Your art could become an emote or badge that supporters earn in {STREAMER.name}'s Challenge Train. You're credited
+        Your art could become an emote or badge that supporters earn in {STREAMER.name}'s Community Climb. You're credited
         every time it unlocks, and you get the Creator badge.
       </p>
 
@@ -30,7 +30,7 @@ export default function FanHome({ state, dispatch }) {
             <li key={r.id}>
               <button className="request-item" onClick={() => dispatch({ type: 'FAN_OPEN_REQUEST', requestId: r.id })}>
                 <span className="request-item-top">
-                  <span className="tag tag--lead">Level {r.level}</span>
+                  <span className="tag tag--lead">Goal {r.level}</span>
                   <span className="tag tag--kind">{r.kind}</span>
                   <span className="muted small">{submissionsFor(state, r.id).length} submitted</span>
                   <span className="ladder-chevron" aria-hidden="true">›</span>

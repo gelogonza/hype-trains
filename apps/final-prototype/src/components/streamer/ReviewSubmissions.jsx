@@ -1,5 +1,5 @@
 import ArtTile from '../ArtTile.jsx';
-import { MOD_NAME } from '../../data/train.js';
+import { MOD_NAME } from '../../data/climb.js';
 
 function SubmissionList({ items, level, dispatch, note }) {
   return (

@@ -1,16 +1,17 @@
 import {
   DEFAULT_REWARDS,
+  DEFAULT_SETTINGS,
   FAN_NAME,
   INITIAL_LADDER,
   INITIAL_REQUESTS,
   INITIAL_SUBMISSIONS,
   STREAMER,
-} from '../data/train.js';
-import { makeTrainState, trainReducer } from './trainReducer.js';
+} from '../data/climb.js';
+import { climbReducer, isLive, makeClimbState, missedLevels } from './climbReducer.js';
 
-// Root state: which role the tester is playing, the streamer's draft ladder, the published
-// ladder the viewer's train uses, the community's art requests and submissions, and the train.
-// `sim` holds the prototype controls for the simulated crowd (outcome and speed).
+// Root state: which role the tester is playing, the streamer's draft goals and climb settings,
+// the published ones the viewer's climb uses, the community's art requests and submissions, and
+// the climb. `sim` holds the prototype controls for the simulated crowd (outcome and speed).
 
 const clone = (x) => JSON.parse(JSON.stringify(x));
 
@@ -21,17 +22,23 @@ export function makeInitialState() {
     ui: { streamerTab: 'live', streamerLevel: null, streamerPanel: 'edit', fanRequestId: null, notice: null },
     draft: clone(INITIAL_LADDER),
     published: clone(INITIAL_LADDER),
+    // Climb settings: segment length in minutes, and whether the final goal is a mystery.
+    draftSettings: { ...DEFAULT_SETTINGS },
+    settings: { ...DEFAULT_SETTINGS },
     requests: clone(INITIAL_REQUESTS),
     submissions: clone(INITIAL_SUBMISSIONS),
     nextSubId: 1,
-    train: makeTrainState(),
+    climb: makeClimbState(DEFAULT_SETTINGS),
   };
 }
 
 // ---------- selectors ----------
 
-export const hasUnpublishedChanges = (state) => JSON.stringify(state.draft) !== JSON.stringify(state.published);
-export const canPublish = (state) => hasUnpublishedChanges(state) && state.draft.every((l) => l.challenge.trim().length > 0);
+export const hasUnpublishedChanges = (state) =>
+  JSON.stringify([state.draft, state.draftSettings]) !== JSON.stringify([state.published, state.settings]);
+// Goals can't change mid-climb.
+export const canPublish = (state) =>
+  hasUnpublishedChanges(state) && !isLive(state.climb) && state.draft.every((l) => l.challenge.trim().length > 0);
 export const openRequestFor = (state, level) => state.requests.find((r) => r.level === level && r.status === 'open') || null;
 export const submissionsFor = (state, requestId) => state.submissions.filter((s) => s.requestId === requestId);
 export const vaultItems = (state) => state.submissions.filter((s) => s.status === 'vault');
@@ -77,6 +84,9 @@ export function reducer(state, action) {
 
     case 'STREAMER_PANEL':
       return { ...state, ui: { ...state.ui, streamerPanel: action.panel } };
+
+    case 'SET_SETTING':
+      return { ...state, draftSettings: { ...state.draftSettings, ...action.settings } };
 
     case 'SET_CHALLENGE':
       return {
@@ -129,14 +139,29 @@ export function reducer(state, action) {
 
     case 'PUBLISH': {
       if (!canPublish(state)) return state;
-      const published = clone(state.draft);
-      const train = makeTrainState([{ id: 'publish', kind: 'system', text: `${STREAMER.name} set up a new Challenge Train` }]);
+      const settings = { ...state.draftSettings };
+      const climb = makeClimbState(settings, {
+        extraChat: [{ id: 'publish', kind: 'system', text: `${STREAMER.name} scheduled a new Community Climb. Tap it to see the goals.` }],
+      });
       return {
         ...state,
-        published,
-        train,
-        ui: { ...state.ui, streamerTab: 'live', streamerLevel: null, notice: 'Published. Your new train is boarding.' },
+        published: clone(state.draft),
+        settings,
+        climb,
+        ui: { ...state.ui, streamerTab: 'live', streamerLevel: null, notice: 'Published. Your climb is scheduled; start it when you’re ready.' },
       };
+    }
+
+    // After a climb ends, schedule the next one with the same goals. Goals it didn't reach are
+    // marked as carried over, and everyone keeps the rewards they earned.
+    case 'NEXT_CLIMB': {
+      if (isLive(state.climb)) return state;
+      const climb = makeClimbState(state.settings, {
+        carried: missedLevels(state.climb, state.published).map((l) => l.level),
+        earnedLevels: state.climb.earnedLevels,
+        extraChat: [{ id: 'next', kind: 'system', text: `${STREAMER.name} scheduled the next Community Climb. Unreached goals are back!` }],
+      });
+      return { ...state, climb, ui: { ...state.ui, notice: 'Next climb scheduled. Edit the goals in setup, or start it when you’re ready.' } };
     }
 
     // ----- fan -----
@@ -173,11 +198,11 @@ export function reducer(state, action) {
       // Everything goes back to the fixtures, but the tester keeps their role and prototype controls.
       return { ...makeInitialState(), role: state.role, sim: state.sim };
 
-    // ----- viewer train -----
+    // ----- the climb -----
 
     default: {
-      const train = trainReducer(state.train, action, state.published);
-      return train === state.train ? state : { ...state, train };
+      const climb = climbReducer(state.climb, action, state.published);
+      return climb === state.climb ? state : { ...state, climb };
     }
   }
 }

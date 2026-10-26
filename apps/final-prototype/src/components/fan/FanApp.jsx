@@ -1,4 +1,4 @@
-import { FAN_NAME, STREAMER } from '../../data/train.js';
+import { FAN_NAME, STREAMER } from '../../data/climb.js';
 import FanHome from './FanHome.jsx';
 import SubmitArt from './SubmitArt.jsx';
 

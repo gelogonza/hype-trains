@@ -2,12 +2,12 @@ import { useState } from 'react';
 
 const OUTCOMES = [
   { id: 'auto', label: 'Auto' },
-  { id: 'success', label: 'Make it' },
+  { id: 'success', label: 'Summit' },
   { id: 'fail', label: 'Run out' },
 ];
 const SPEEDS = [1, 2, 4];
 
-export default function DevPanel({ onReset, sim, onSim, onSkip }) {
+export default function DevPanel({ onReset, sim, onSim, onSkip, onStart, canStart }) {
   const [open, setOpen] = useState(false);
   return (
     <div className={`dev${open ? ' dev--open' : ''}`}>
@@ -39,7 +39,8 @@ export default function DevPanel({ onReset, sim, onSim, onSkip }) {
           </div>
         </div>
 
-        <button className="btn-secondary" onClick={onSkip}>Skip 15 seconds</button>
+        <button className="btn-secondary" onClick={onStart} disabled={!canStart}>Start the climb (as streamer)</button>
+        <button className="btn-secondary" onClick={onSkip}>Skip 30 seconds</button>
         <button
           className="btn-secondary"
           onClick={() => {

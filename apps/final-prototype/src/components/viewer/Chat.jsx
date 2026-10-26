@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef } from 'react';
-import { DEFAULT_REWARDS } from '../../data/train.js';
+import { DEFAULT_REWARDS } from '../../data/climb.js';
 import ArtTile from '../ArtTile.jsx';
 import Icon from '../Icon.jsx';
 
@@ -13,9 +13,9 @@ function Message({ text, emotes }) {
   });
 }
 
-const Conductor = () => (
-  <span className="chat-badge chat-badge--conductor" title="Conductor">
-    <Icon name="crown" size={12} />
+const LeadClimber = () => (
+  <span className="chat-badge chat-badge--lead" title="Lead Climber">
+    <Icon name="mountain" size={12} />
   </span>
 );
 
@@ -25,7 +25,7 @@ const Broadcaster = () => (
   </span>
 );
 
-function ChatLine({ line, emotes, crowns }) {
+function ChatLine({ line, emotes }) {
   if (line.kind === 'system') {
     return <li className="chat-line chat-line--system">{line.text}</li>;
   }
@@ -37,7 +37,7 @@ function ChatLine({ line, emotes, crowns }) {
           <Icon name={bits ? 'bits' : /gift/.test(line.text) ? 'gift' : 'star'} size={16} />
         </span>
         <span>
-          {crowns.has(line.author) && <Conductor />}
+          {line.lead && <LeadClimber />}
           <b style={{ color: line.me ? undefined : line.color }}>{line.me ? 'You' : line.author}</b>{' '}
           {line.me ? line.text.replace(/^is /, 'are ') : line.text}
           {line.hype && <span className="chat-notice-hype"> +{line.hype.toLocaleString()} hype</span>}
@@ -56,7 +56,7 @@ function ChatLine({ line, emotes, crowns }) {
   if (line.kind === 'you') {
     return (
       <li className="chat-line">
-        {crowns.has(line.author) && <Conductor />}
+        {line.lead && <LeadClimber />}
         {line.badges?.map((b) => (
           <span key={b.name} className="chat-badge-wrap">
             <ArtTile art={b.art} kind="badge" size={18} gold={b.gold} title={b.name} />
@@ -68,14 +68,13 @@ function ChatLine({ line, emotes, crowns }) {
   }
   return (
     <li className="chat-line">
-      {crowns.has(line.author) && <Conductor />}
+      {line.lead && <LeadClimber />}
       <span className="chat-author" style={{ color: line.color }}>{line.author}</span>: <Message text={line.text} emotes={emotes} />
     </li>
   );
 }
 
-// `crowns` holds the names of the current Conductors (top Bits, top Subs), who get the crown badge.
-export default function Chat({ lines, ladder, crowns = new Set() }) {
+export default function Chat({ lines, ladder }) {
   const scrollRef = useRef(null);
   const emotes = useMemo(() => {
     const all = [...ladder.map((l) => l.reward), ...Object.values(DEFAULT_REWARDS)].filter((r) => r.kind === 'emote');
@@ -93,7 +92,7 @@ export default function Chat({ lines, ladder, crowns = new Set() }) {
       <ul className="chat-list" aria-live="polite">
         <li className="chat-line chat-line--welcome">Welcome to the chat room!</li>
         {lines.map((line) => (
-          <ChatLine key={line.id} line={line} emotes={emotes} crowns={crowns} />
+          <ChatLine key={line.id} line={line} emotes={emotes} />
         ))}
       </ul>
     </section>

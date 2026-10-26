@@ -9,16 +9,14 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@react-three/fiber": "^9.8.2",
     "react": "^19.3.1",
-    "react-dom": "^19.3.1",
-    "three": "^0.186.1"
+    "react-dom": "^19.3.1"
   },
   "devDependencies": {
     "@vitejs/plugin-react": "^6.1.2",
     "vite": "^8.3.4"
   },
-  "description": "Challenge Train, final prototype (Thejas Mirle)",
+  "description": "Community Climb, final prototype (Thejas Mirle)",
   "hype": {
     "port": 5105,
     "out": "dist"

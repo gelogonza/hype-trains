@@ -1,7 +1,7 @@
 import ArtTile from '../ArtTile.jsx';
 import RequestForm from './RequestForm.jsx';
 import ReviewSubmissions from './ReviewSubmissions.jsx';
-import { COMMUNITY_PROMPTS } from '../../data/train.js';
+import { COMMUNITY_PROMPTS } from '../../data/climb.js';
 import { openRequestFor, submissionsFor, vaultItems } from '../../state/reducer.js';
 
 export default function LevelEditor({ state, dispatch }) {
@@ -18,10 +18,10 @@ export default function LevelEditor({ state, dispatch }) {
     <>
       <div className="screen-nav">
         <button className="back-btn" onClick={back}>
-          ‹ {panel === 'edit' ? 'All levels' : `Level ${n}`}
+          ‹ {panel === 'edit' ? 'All goals' : `Goal ${n}`}
         </button>
         <span className="screen-nav-title">
-          {panel === 'edit' ? `Level ${n}` : panel === 'request' ? 'Request art' : 'Pick a reward'}
+          {panel === 'edit' ? `Goal ${n}` : panel === 'request' ? 'Request art' : 'Pick a reward'}
         </span>
       </div>
 
@@ -48,7 +48,7 @@ export default function LevelEditor({ state, dispatch }) {
                 maxLength={80}
                 value={level.challenge}
                 placeholder="Write it the way you'd say it on stream"
-                aria-label={`Challenge for level ${n}`}
+                aria-label={`Challenge for goal ${n}`}
                 onChange={(e) => dispatch({ type: 'SET_CHALLENGE', level: n, text: e.target.value })}
               />
               <div className="char-count">{level.challenge.length}/80</div>

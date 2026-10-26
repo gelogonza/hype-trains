@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import ArtTile from '../ArtTile.jsx';
-import { ART_COLORS, ART_EMOJI } from '../../data/train.js';
+import { ART_COLORS, ART_EMOJI } from '../../data/climb.js';
 
 const NAME_RULE = /^[A-Za-z0-9]{3,20}$/;
 
@@ -18,7 +18,7 @@ export default function SubmitArt({ request, dispatch }) {
       </div>
       <div className="screen-body">
         <div className="request-card">
-          <div className="request-card-title">Level {request.level} · {request.kind}</div>
+          <div className="request-card-title">Goal {request.level} · {request.kind}</div>
           <p>"{request.brief}"</p>
         </div>
 

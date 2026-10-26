@@ -1,11 +1,11 @@
-// All fixture data for the Challenge Train prototype.
+// All fixture data for the Community Climb prototype.
 // Nothing here is real: the streamer, fans, chat, submissions and points are seeded fakes.
 
 export const STREAMER = {
   name: 'PixelPaloma',
   avatar: '🦜',
   game: 'Cozy Farm Sim',
-  title: 'cozy farm day 🌱 Challenge Train is ON, !train for the ladder',
+  title: 'cozy farm day 🌱 Community Climb tonight, !climb for the goals',
   viewers: 1284,
 };
 
@@ -14,16 +14,18 @@ export const USER_NAME = 'you';
 export const FAN_NAME = '@sketchy_sam';
 export const MOD_NAME = '@mod_rae';
 
-// Like the current Hype Train: it departs once enough people support, and each level has a
-// countdown that resets when the level is reached. Times are shortened for testing.
-export const KICKOFF_NEEDED = 3;
-export const LEVEL_SECONDS = 60;
-export const HURRY_SECONDS = 15;
+// A Community Climb is a planned segment: the streamer starts it, and one countdown runs for the
+// whole climb. Lengths are shortened for testing; real segments would be 15–60 minutes.
+export const SEGMENT_MINUTES = [3, 5, 10];
+export const DEFAULT_SETTINGS = { minutes: 5, mystery: true };
+export const HURRY_SECONDS = 30;
+// Past this share of a goal, the climb calls it out ("Almost there!").
+export const ALMOST_PCT = 85;
 
-// How many contributors the leaderboard lists (the runner train, when on, gives each a carriage).
+// How many contributors the leaderboard lists.
 export const LEADERBOARD_SIZE = 5;
 
-// Cumulative point thresholds, one per level.
+// Cumulative hype thresholds, one per goal. All support is pooled, so any purchase moves the climb.
 export const THRESHOLDS = [1000, 3000, 6000, 10000];
 
 // Placeholder "art". A fan picks an emoji and a background color; no real images are uploaded.
@@ -37,15 +39,15 @@ export const COMMUNITY_PROMPTS = [
   'What would make your chat lose its mind?',
 ];
 
-// Default rewards, used when no fan art has been picked for a level.
+// Default rewards, used when no fan art has been picked for a goal.
 export const DEFAULT_REWARDS = {
-  1: { id: 'default-1', kind: 'emote', name: 'TrainWave', art: { emoji: '👋', bg: '#4a4a52' }, credit: null },
-  2: { id: 'default-2', kind: 'badge', name: 'Train Rider', art: { emoji: '🚂', bg: '#4a4a52' }, credit: null },
-  3: { id: 'default-3', kind: 'emote', name: 'TrainHype', art: { emoji: '🔥', bg: '#4a4a52' }, credit: null },
+  1: { id: 'default-1', kind: 'emote', name: 'SummitWave', art: { emoji: '👋', bg: '#4a4a52' }, credit: null },
+  2: { id: 'default-2', kind: 'badge', name: 'Trailblazer', art: { emoji: '🥾', bg: '#4a4a52' }, credit: null },
+  3: { id: 'default-3', kind: 'emote', name: 'ClimbHype', art: { emoji: '🔥', bg: '#4a4a52' }, credit: null },
   4: { id: 'default-4', kind: 'badge', name: 'Hair Raiser', art: { emoji: '🏆', bg: '#4a4a52' }, credit: null, gold: true },
 };
 
-// The ladder from the last train. It starts as both the published ladder and the streamer's draft.
+// The goals from the last climb. They start as both the published goals and the streamer's draft.
 export const INITIAL_LADDER = [
   {
     level: 1,
@@ -73,7 +75,7 @@ export const INITIAL_LADDER = [
   },
 ];
 
-// What the streamer says when they start each level's challenge on stream.
+// What the streamer says when they start each goal's challenge on stream.
 export const STREAMER_REACTIONS = {
   1: 'Okay chat, you asked for it. NPC impression, here we go 😂',
   2: 'Clearing my throat... this is the cozy crew theme song 🎤',
@@ -81,13 +83,17 @@ export const STREAMER_REACTIONS = {
   4: "Hair dye is out. You chose this, chat 💜",
 };
 
-// What the streamer says when time runs out, by the last level reached.
-export const STREAMER_TIMEOUT = {
-  0: "Aww, so close! We'll get the train going next time 💜",
-  1: "Time's up! Level 1 still counts, NPC impression incoming 😂",
-  2: "Time's up! Level 2 it is. The rest comes back next train 💜",
-  3: 'SO close to the final level! Hair dye is coming back next train 👀',
+export const STREAMER_START = "Community Climb is ON! Four goals, and the last one's a secret 👀 Let's climb!";
+
+// What the streamer says when the climb ends early, by the last goal reached.
+export const STREAMER_END = {
+  0: "Aww, we didn't make the first goal this time. It's all coming back next climb 💜",
+  1: 'Goal 1 it is! NPC impression incoming. The rest comes back next climb 😂',
+  2: 'Two goals down! The rest is coming back next climb 💜',
+  3: 'SO close to the mystery goal! It stays a secret until next climb 👀',
 };
+
+export const STREAMER_SUMMIT = 'WE MADE THE SUMMIT!!! Thank you all so much 💜';
 
 // Art requests the streamer has opened for the community.
 export const INITIAL_REQUESTS = [
@@ -121,18 +127,17 @@ export const SUPPORT_GROUPS = [
   { id: 'bits', title: 'Bits', note: '1 point per Bit' },
 ];
 
-// Seeded chat from fake viewers.
+// Seeded chat from fake viewers. The climb is scheduled but hasn't started yet.
 export const SEED_CHAT = [
-  { id: 'seed-1', kind: 'viewer', author: 'mossy_toad', color: '#00c8af', text: 'the train is back lets gooo' },
-  { id: 'seed-2', kind: 'viewer', author: 'kiwi_kat', color: '#ff7f50', text: 'my HypeHeart emote is on level 1 again 🥹' },
-  { id: 'seed-3', kind: 'viewer', author: 'LoafBoss', color: '#1e90ff', text: 'pepper level when' },
-  { id: 'seed-4', kind: 'support', author: 'mossy_toad', color: '#00c8af', text: 'subscribed at Tier 1', hype: 500 },
-  { id: 'seed-4b', kind: 'system', text: 'The Challenge Train is boarding! 2 more contributions to start it.' },
-  { id: 'seed-5', kind: 'viewer', author: 'quietfern', color: '#9acd32', text: 'first time here, what is this train thing' },
-  { id: 'seed-6', kind: 'viewer', author: 'mossy_toad', color: '#00c8af', text: 'hi @quietfern welcome in 👋' },
+  { id: 'seed-1', kind: 'viewer', author: 'mossy_toad', color: '#00c8af', text: 'climb night!! 🧗' },
+  { id: 'seed-2', kind: 'viewer', author: 'kiwi_kat', color: '#ff7f50', text: 'my HypeHeart emote is goal 1 again 🥹' },
+  { id: 'seed-3', kind: 'viewer', author: 'LoafBoss', color: '#1e90ff', text: 'pepper goal when' },
+  { id: 'seed-4', kind: 'system', text: 'PixelPaloma scheduled a Community Climb for this stream. Tap it to see the goals.' },
+  { id: 'seed-5', kind: 'viewer', author: 'quietfern', color: '#9acd32', text: "first time here, what's the climb?" },
+  { id: 'seed-6', kind: 'viewer', author: 'mossy_toad', color: '#00c8af', text: '@quietfern she sets goals, we unlock them together 👋' },
 ];
 
-// The simulated crowd: who else supports and chats while the train runs.
+// The simulated crowd: who else supports and chats during the climb.
 export const CROWD = [
   { author: 'mossy_toad', color: '#00c8af' },
   { author: 'kiwi_kat', color: '#ff7f50' },
@@ -144,8 +149,8 @@ export const CROWD = [
 ];
 
 // How often the crowd supports per second, by prototype outcome. "auto" usually stalls around
-// Level 2 or 3, so the tester's own support decides whether the train makes it.
-export const CROWD_RATE = { auto: 0.09, success: 0.2, fail: 0.035 };
+// goal 2 or 3, so the tester's own support decides whether the climb reaches the summit.
+export const CROWD_RATE = { auto: 0.05, success: 0.12, fail: 0.02 };
 
 // What the crowd spends, as [option id, weight].
 export const CROWD_MIX = [
@@ -157,6 +162,6 @@ export const CROWD_MIX = [
 ];
 
 export const CROWD_LINES = {
-  boarding: ['train is boarding!!', 'get on get on', 'one more sub and we go', 'ALL ABOARD 🚂'],
-  running: ['LETS GOOOO', 'CHOO CHOO 🚂', 'we are NOT missing this level', 'pepper level when', 'faster faster', 'HYPE', 'clock is ticking chat!!', '💜💜💜'],
+  scheduled: ['when does the climb start??', 'mystery goal theories 👀', 'i bet the secret one is hair dye', 'saving my bits for the climb', 'CLIMB CLIMB CLIMB'],
+  live: ['LETS GOOOO', 'climb climb climb 🧗', 'we are NOT missing this goal', 'pepper goal when', 'what is the mystery goal 👀', 'HYPE', 'clock is ticking chat!!', '💜💜💜'],
 };

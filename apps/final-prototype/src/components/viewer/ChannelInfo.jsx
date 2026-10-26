@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { STREAMER } from '../../data/train.js';
+import { STREAMER } from '../../data/climb.js';
 import Icon from '../Icon.jsx';
 
 // The row under the player in the Twitch app: avatar with a live ring, name, title, category,
