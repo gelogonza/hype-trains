@@ -18,14 +18,11 @@ export default function SupportSheet({ climb, ladder, dispatch, onClose }) {
   const status = !live ? (
     <div className="sheet-status">
       <Icon name="mountain" size={16} />
-      {climb.phase === 'scheduled'
-        ? `The Community Climb hasn't started yet, so this won't count toward a goal.`
-        : 'The Community Climb is over. Your support still shows in chat.'}
+      {climb.phase === 'scheduled' ? "Climb hasn't started" : 'Climb is over'}
     </div>
   ) : (
     <div className={`sheet-status${!isHeld(climb) && climb.timeLeft <= HURRY_SECONDS ? ' sheet-status--hurry' : ''}`}>
-      <Icon name={isHeld(climb) ? 'pause' : 'clock'} size={16} /> {formatTime(climb.timeLeft)} left in the climb · next: Goal {level.level}
-      {isHeld(climb) && ' (paused for the challenge)'}
+      <Icon name={isHeld(climb) ? 'pause' : 'clock'} size={16} /> {formatTime(climb.timeLeft)} · Goal {level.level}
     </div>
   );
 
@@ -42,8 +39,8 @@ export default function SupportSheet({ climb, ladder, dispatch, onClose }) {
           {live && (
             <p className="confirm-effect">
               {after >= level.threshold
-                ? `This unlocks Goal ${level.level}!`
-                : `${(level.threshold - after).toLocaleString()} more to Goal ${level.level} after this.`}
+                ? `Unlocks Goal ${level.level}!`
+                : `${(level.threshold - after).toLocaleString()} to Goal ${level.level}`}
             </p>
           )}
           <div className="proto-label">Prototype: no real payment</div>
@@ -56,7 +53,6 @@ export default function SupportSheet({ climb, ladder, dispatch, onClose }) {
     );
   }
 
-  const group = SUPPORT_GROUPS.find((g) => g.id === tab);
   return (
     <BottomSheet title={`Support ${STREAMER.name}`} onClose={onClose}>
       <div className="tw-tabs" role="tablist" aria-label="Ways to support">
@@ -71,13 +67,12 @@ export default function SupportSheet({ climb, ladder, dispatch, onClose }) {
         <div className="sheet-reward">
           <ArtTile art={level.reward.art} kind={level.reward.kind} size={32} gold={level.reward.gold} />
           <span>
-            Support now and earn <b>{level.reward.name}</b> when Goal {level.level} unlocks
-            {level.reward.credit && <span className="muted"> · art by {level.reward.credit}</span>}
+            Earn <b>{level.reward.name}</b>
+            {level.reward.credit && <span className="muted"> by {level.reward.credit}</span>}
           </span>
         </div>
       )}
-      {hidden && <div className="sheet-reward">Support now to unlock the mystery goal and its secret reward.</div>}
-      <p className="sheet-note">{group.note}</p>
+      {hidden && <div className="sheet-reward">Earn ???</div>}
       <ul className="option-list">
         {SUPPORT_OPTIONS.filter((o) => o.group === tab).map((o) => (
           <li key={o.id}>

@@ -6,17 +6,16 @@ import Icon from '../Icon.jsx';
 function Moment({ moment, climb, ladder }) {
   const level = moment.level && getLevel(ladder, moment.level);
   const content = {
-    start: { kicker: 'Community Climb', title: `${maxLevel(ladder)} goals · ${formatTime(climb.seconds)}`, line: "Let's climb!" },
-    unlock: { kicker: `🚩 Goal ${moment.level} unlocked`, title: level?.challenge, line: 'The community did it!' },
-    reveal: { kicker: '🎁 Mystery goal revealed', title: level?.challenge, line: 'The final goal' },
-    summit: { kicker: '⛰ Summit!', title: 'Every goal unlocked', line: level?.challenge },
+    start: { kicker: 'Community Climb', title: `${maxLevel(ladder)} goals · ${formatTime(climb.seconds)}` },
+    unlock: { kicker: `🚩 Goal ${moment.level}`, title: level?.challenge },
+    reveal: { kicker: '🎁 Mystery goal', title: level?.challenge },
+    summit: { kicker: '⛰ Summit!', title: level?.challenge },
   }[moment.type];
 
   return (
     <div key={moment.key} className={`player-moment player-moment--${moment.type}`} role="status">
       <span className="player-moment-kicker">{content.kicker}</span>
       <span className="player-moment-title">{content.title}</span>
-      <span className="player-moment-line">{content.line}</span>
     </div>
   );
 }

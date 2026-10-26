@@ -6,9 +6,6 @@ export default function RequestForm({ level, dispatch }) {
 
   return (
     <section className="editor-section">
-      <p className="screen-intro">
-        Fans will see this request and submit art. Mods shortlist the best ones, then you pick one for Goal {level}.
-      </p>
       <h3 className="editor-heading">What should they make?</h3>
       <div className="segmented" role="radiogroup" aria-label="Reward type">
         {['emote', 'badge'].map((k) => (

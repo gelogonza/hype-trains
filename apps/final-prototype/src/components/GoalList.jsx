@@ -1,16 +1,15 @@
-import { STREAMER } from '../data/climb.js';
 import { challengeStatus, isHidden } from '../state/climbReducer.js';
 import ArtTile from './ArtTile.jsx';
 
 const LABEL = {
-  locked: 'Locked',
-  owed: `Unlocked · ${STREAMER.name} will do it`,
-  live: '🔴 Happening now',
-  done: '✅ Done on stream',
+  locked: null,
+  owed: 'Unlocked',
+  live: '🔴 Live',
+  done: '✅ Done',
 };
 
 // Every goal: what it unlocks for everyone (the challenge) and for supporters (the reward), and
-// where it stands. The mystery goal stays a "?" until it's revealed.
+// where it stands. The mystery goal stays a "?" until it's revealed. Kept to as few words as possible.
 export default function GoalList({ climb, ladder }) {
   return (
     <ol className="goal-list">
@@ -26,10 +25,10 @@ export default function GoalList({ climb, ladder }) {
             <span className="goal-text">
               <span className="goal-head">
                 Goal {l.level} · {l.threshold.toLocaleString()} hype
-                {carried && <span className="goal-tag">Back from last climb</span>}
+                {carried && <span className="goal-tag">Back</span>}
               </span>
-              <span className="goal-challenge">{hidden ? 'Mystery goal: revealed when Goal ' + (l.level - 1) + ' unlocks' : l.challenge}</span>
-              <span className="goal-status">{LABEL[status]}</span>
+              <span className="goal-challenge">{hidden ? 'Mystery' : l.challenge}</span>
+              {LABEL[status] && <span className="goal-status">{LABEL[status]}</span>}
             </span>
             {hidden ? (
               <span className="goal-reward goal-reward--mystery" aria-label="Mystery reward">?</span>

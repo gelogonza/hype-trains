@@ -32,19 +32,16 @@ export default function ClimbCard({ climb, ladder, onOpen }) {
 
   if (climb.phase === 'scheduled') {
     status = (
-      <>
-        <b>
-          {n} goals · {formatTime(climb.seconds)} climb
-        </b>
-        {climb.mystery && <span> · final goal is a mystery</span>}
-      </>
+      <b>
+        {n} goals · {formatTime(climb.seconds)}
+      </b>
     );
-    clock = <span className="cc-pill">Starts soon</span>;
+    clock = <span className="cc-pill">Soon</span>;
   } else if (held) {
     tone = 'held';
     status = (
       <>
-        <b>Live now:</b> {getLevel(ladder, liveChallenge(climb)).challenge}
+        <b>Live:</b> {getLevel(ladder, liveChallenge(climb)).challenge}
       </>
     );
   } else if (moment?.type === 'unlock' || moment?.type === 'summit') {
@@ -64,7 +61,7 @@ export default function ClimbCard({ climb, ladder, onOpen }) {
     tone = 'reveal';
     status = (
       <>
-        <b>Mystery goal revealed:</b> {getLevel(ladder, moment.level).challenge}
+        <b>Revealed:</b> {getLevel(ladder, moment.level).challenge}
       </>
     );
   } else if (climb.phase === 'live') {
@@ -72,7 +69,7 @@ export default function ClimbCard({ climb, ladder, onOpen }) {
       tone = 'almost';
       status = (
         <>
-          <b>Almost!</b> {(to - climb.points).toLocaleString()} hype to Goal {next.level}
+          <b>Almost!</b> {(to - climb.points).toLocaleString()} to go
         </>
       );
     } else {
@@ -85,13 +82,13 @@ export default function ClimbCard({ climb, ladder, onOpen }) {
   } else if (climb.phase === 'complete') {
     status = (
       <>
-        <b>Summit!</b> All {n} goals unlocked · see recap
+        <b>Summit!</b>
       </>
     );
   } else {
     status = (
       <>
-        <b>{climb.levelReached ? `Reached Goal ${climb.levelReached}` : 'Climb over'}</b> · see recap
+        <b>{climb.levelReached ? `Reached Goal ${climb.levelReached}` : 'Climb over'}</b>
       </>
     );
   }

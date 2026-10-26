@@ -43,10 +43,6 @@ export default function Leaderboard({ climb }) {
           )}
         </ol>
       )}
-      <p className="board-note">
-        Subs, gift subs and Bits all count. The Lead Climber wears the mountain badge in chat.
-        {myRank === 0 && ' Support to join the leaderboard.'}
-      </p>
     </div>
   );
 }

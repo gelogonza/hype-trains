@@ -14,7 +14,7 @@ import Summary from './Summary.jsx';
 // The Twitch mobile watch page: player, channel row, then chat with the Community Climb and the
 // leaderboard pinned on top, and the message bar at the bottom.
 export default function ViewerApp({ state, dispatch, onReset }) {
-  const { climb, published: ladder } = state;
+  const { climb, goals: ladder } = state;
   const [draft, setDraft] = useState('');
   const close = useCallback(() => dispatch({ type: 'CLOSE_SHEET' }), [dispatch]);
   const open = (sheet, tab) => dispatch({ type: 'OPEN_SHEET', sheet, tab });

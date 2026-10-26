@@ -19,7 +19,7 @@ export default function App() {
 
   // The climb's clock and the simulated crowd. They only run while the climb is on screen (the
   // viewer, or the streamer's Stream Manager), so nothing happens off-screen.
-  const onScreen = state.role === 'viewer' || (state.role === 'streamer' && state.ui.streamerTab === 'live');
+  const onScreen = state.role === 'viewer' || state.role === 'streamer';
   const watching = onScreen && (isLive(climb) || climb.phase === 'scheduled');
   useEffect(() => {
     if (!watching) return;

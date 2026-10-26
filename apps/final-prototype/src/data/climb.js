@@ -132,7 +132,7 @@ export const SEED_CHAT = [
   { id: 'seed-1', kind: 'viewer', author: 'mossy_toad', color: '#00c8af', text: 'climb night!! 🧗' },
   { id: 'seed-2', kind: 'viewer', author: 'kiwi_kat', color: '#ff7f50', text: 'my HypeHeart emote is goal 1 again 🥹' },
   { id: 'seed-3', kind: 'viewer', author: 'LoafBoss', color: '#1e90ff', text: 'pepper goal when' },
-  { id: 'seed-4', kind: 'system', text: 'PixelPaloma scheduled a Community Climb for this stream. Tap it to see the goals.' },
+  { id: 'seed-4', kind: 'system', text: '⛰ Community Climb coming up' },
   { id: 'seed-5', kind: 'viewer', author: 'quietfern', color: '#9acd32', text: "first time here, what's the climb?" },
   { id: 'seed-6', kind: 'viewer', author: 'mossy_toad', color: '#00c8af', text: '@quietfern she sets goals, we unlock them together 👋' },
 ];

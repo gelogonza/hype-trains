@@ -1,5 +1,6 @@
 import {
   ALMOST_PCT,
+  CROWD,
   SEED_CHAT,
   STREAMER,
   STREAMER_END,
@@ -11,7 +12,7 @@ import {
 } from '../data/climb.js';
 
 // The Community Climb: a segment the streamer plans and runs. Goal content (challenge + reward)
-// comes from the published goals; in the data each goal is a `level`.
+// comes from the streamer's goals; in the data each goal is a `level`.
 //
 // Phases:
 //   scheduled  announced; viewers can preview the goals, but nothing counts until it starts
@@ -159,7 +160,7 @@ function addSupport(climb, ladder, option, who) {
   }
   const leader = leadClimber(next);
   if (leader.name !== leaderBefore?.name) {
-    next = addChat(next, { kind: 'system', text: me ? '⛰ You took the lead! You’re the Lead Climber.' : `⛰ ${leader.name} took the lead!` });
+    next = addChat(next, { kind: 'system', text: `⛰ ${me ? 'You' : leader.name} took the lead` });
   }
 
   // Reach every goal this support covers, in order.
@@ -167,17 +168,19 @@ function addSupport(climb, ladder, option, who) {
     const level = getLevel(ladder, next.levelReached + 1);
     next = { ...next, levelReached: level.level };
     next = addMoment(next, { type: level.level === maxLevel(ladder) ? 'summit' : 'unlock', level: level.level });
-    next = addChat(next, {
-      kind: 'system',
-      text: `🚩 Goal ${level.level} unlocked: "${level.challenge}". ${STREAMER.name} will do it when they're ready.`,
-    });
+    next = addChat(next, { kind: 'system', text: `🚩 Goal ${level.level}: ${level.challenge}` });
+
+    // The fan who made the emote shows off their creator version.
+    const reward = level.reward;
+    const creator = reward.kind === 'emote' && reward.credit && CROWD.find((c) => `@${c.author}` === reward.credit);
+    if (creator) {
+      next = addChat(next, { kind: 'viewer', author: creator.author, color: creator.color, text: `${reward.name} ${reward.name} 🥹` });
+    }
 
     // Contributor reward: only for users who supported during this climb.
-    const reward = level.reward;
     if (hasDonated(next) && !next.earnedLevels.includes(level.level)) {
       next = { ...next, earnedLevels: [...next.earnedLevels, level.level] };
-      const credit = reward.credit ? ` (art by ${reward.credit})` : '';
-      next = addChat(next, { kind: 'system', text: `You earned the ${reward.name} ${reward.kind}${credit}` });
+      next = addChat(next, { kind: 'system', text: `You got ${reward.name}` });
       next = addChat(next, {
         kind: 'you',
         author: USER_NAME,
@@ -191,7 +194,7 @@ function addSupport(climb, ladder, option, who) {
     const after = getLevel(ladder, level.level + 1);
     if (after && next.mystery && after.level === maxLevel(ladder)) {
       next = addMoment(next, { type: 'reveal', level: after.level });
-      next = addChat(next, { kind: 'system', text: `🎁 Mystery goal revealed: "${after.challenge}"` });
+      next = addChat(next, { kind: 'system', text: `🎁 Mystery goal: ${after.challenge}` });
     }
   }
 
@@ -205,7 +208,7 @@ function addSupport(climb, ladder, option, who) {
   if (progress(next, ladder).pct >= ALMOST_PCT && !next.almost.includes(goal.level)) {
     const left = goal.threshold - next.points;
     next = { ...next, almost: [...next.almost, goal.level] };
-    next = addChat(next, { kind: 'system', text: `⛰ Almost there! ${left.toLocaleString()} hype to Goal ${goal.level}.` });
+    next = addChat(next, { kind: 'system', text: `⛰ Almost! ${left.toLocaleString()} to Goal ${goal.level}` });
   }
   return next;
 }
@@ -216,9 +219,7 @@ function endClimb(climb, by) {
   const reached = climb.levelReached;
   next = addChat(next, {
     kind: 'system',
-    text: `${by === 'time' ? "⏰ Time's up!" : `${STREAMER.name} ended the climb.`} ${
-      reached ? `The community reached Goal ${reached}.` : "The community didn't reach Goal 1 this time."
-    } Unreached goals come back next climb.`,
+    text: `${by === 'time' ? "⏰ Time's up" : '⛰ Climb ended'} · ${reached ? `reached Goal ${reached}` : 'no goals this time'}`,
   });
   return addChat(next, { kind: 'streamer', author: STREAMER.name, text: STREAMER_END[reached] });
 }
@@ -267,10 +268,7 @@ export function climbReducer(climb, action, ladder) {
     case 'START_CLIMB': {
       if (climb.phase !== 'scheduled') return climb;
       let next = addMoment({ ...climb, phase: 'live', timeLeft: climb.seconds }, { type: 'start' });
-      next = addChat(next, {
-        kind: 'system',
-        text: `⛰ Community Climb started! ${maxLevel(ladder)} goals, ${formatTime(climb.seconds)} on the clock${climb.mystery ? ', and the last one is a mystery' : ''}.`,
-      });
+      next = addChat(next, { kind: 'system', text: `⛰ Community Climb started · ${formatTime(climb.seconds)}` });
       return addChat(next, { kind: 'streamer', author: STREAMER.name, text: STREAMER_START });
     }
 
@@ -281,20 +279,14 @@ export function climbReducer(climb, action, ladder) {
       if (challengeStatus(climb, action.level) !== 'owed' || isHeld(climb)) return climb;
       const level = getLevel(ladder, action.level);
       let next = { ...climb, challenges: { ...climb.challenges, [action.level]: 'live' } };
-      next = addChat(next, {
-        kind: 'system',
-        text: `🔴 Live challenge: "${level.challenge}"${isLive(climb) ? '. The clock is paused until it’s done.' : ''}`,
-      });
+      next = addChat(next, { kind: 'system', text: `🔴 Live: ${level.challenge}` });
       return addChat(next, { kind: 'streamer', author: STREAMER.name, text: STREAMER_REACTIONS[action.level] });
     }
 
     case 'FINISH_CHALLENGE': {
       if (challengeStatus(climb, action.level) !== 'live') return climb;
       const next = { ...climb, challenges: { ...climb.challenges, [action.level]: 'done' } };
-      return addChat(next, {
-        kind: 'system',
-        text: `✅ Challenge done!${isLive(climb) ? ` Back to the climb: ${formatTime(climb.timeLeft)} left.` : ''}`,
-      });
+      return addChat(next, { kind: 'system', text: '✅ Challenge done' });
     }
 
     case 'TICK': {

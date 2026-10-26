@@ -4,7 +4,6 @@ import ClimbMountain from '../ClimbMountain.jsx';
 import GoalList from '../GoalList.jsx';
 import Icon from '../Icon.jsx';
 import Leaderboard from '../Leaderboard.jsx';
-import { STREAMER } from '../../data/climb.js';
 import { formatTime, isHeld, isHidden, isLive, maxLevel, nextGoal, progress } from '../../state/climbReducer.js';
 
 // The full Community Climb, opened from the pinned card: the mountain, where the climb is, what
@@ -12,7 +11,7 @@ import { formatTime, isHeld, isHidden, isLive, maxLevel, nextGoal, progress } fr
 // starts it's a preview, which is where the anticipation builds.
 export default function ClimbSheet({ climb, ladder, dispatch, onClose }) {
   const next = nextGoal(climb, ladder);
-  const { to, pct } = progress(climb, ladder);
+  const { to } = progress(climb, ladder);
   const scheduled = climb.phase === 'scheduled';
   const open = (tab) => dispatch({ type: 'OPEN_SHEET', sheet: 'support', tab });
   const hidden = next && isHidden(climb, ladder, next);
@@ -26,30 +25,29 @@ export default function ClimbSheet({ climb, ladder, dispatch, onClose }) {
       <div className="cs-status">
         {scheduled ? (
           <>
-            <div>
-              <b>Starts when {STREAMER.name} kicks it off</b>
-              <div className="muted small">
-                {maxLevel(ladder)} goals · {formatTime(climb.seconds)} on the clock{climb.mystery && ' · the last goal is a mystery'}
-              </div>
+            <div className="cs-status-main">
+              <b>Starts soon</b>
+              <span className="muted small">
+                {maxLevel(ladder)} goals · {formatTime(climb.seconds)}
+              </span>
             </div>
             <button className={`tw-btn tw-btn--secondary${climb.reminder ? ' is-on' : ''}`} aria-pressed={climb.reminder} onClick={() => dispatch({ type: 'TOGGLE_REMINDER' })}>
-              <Icon name="bell" size={14} /> {climb.reminder ? 'On' : 'Notify me'}
+              <Icon name="bell" size={14} /> {climb.reminder ? 'On' : 'Notify'}
             </button>
           </>
         ) : (
           <>
             <div className="cs-status-main">
-              <b>{next ? `Goal ${next.level} of ${maxLevel(ladder)}` : 'Summit reached'}</b>
+              <b>{next ? `Goal ${next.level} of ${maxLevel(ladder)}` : 'Summit!'}</b>
               {next && (
                 <span className="muted small">
-                  {climb.points.toLocaleString()} / {to.toLocaleString()} hype · {Math.round(pct)}%
+                  {climb.points.toLocaleString()} / {to.toLocaleString()}
                 </span>
               )}
             </div>
             {isLive(climb) && (
               <span className={`cs-clock${isHeld(climb) ? ' is-held' : ''}`}>
                 <Icon name={isHeld(climb) ? 'pause' : 'clock'} size={14} /> {formatTime(climb.timeLeft)}
-                {isHeld(climb) && ' paused'}
               </span>
             )}
           </>
@@ -58,24 +56,23 @@ export default function ClimbSheet({ climb, ladder, dispatch, onClose }) {
 
       {next && !scheduled && (
         <section className="cs-next">
-          <h3 className="cs-next-title">{hidden ? 'Next: the mystery goal' : `Goal ${next.level} unlocks`}</h3>
+          <h3 className="cs-next-title">Goal {next.level}</h3>
           <div className="cs-unlock">
             <span className="cs-unlock-label">Everyone</span>
             <span>
               {hidden ? '???' : next.challenge}
-              {!hidden && <span className="muted small"> · {STREAMER.name} picks when to do it</span>}
             </span>
           </div>
           <div className="cs-unlock">
-            <span className="cs-unlock-label">Supporters</span>
+            <span className="cs-unlock-label">You</span>
             {hidden ? (
-              <span>A secret reward</span>
+              <span>???</span>
             ) : (
               <span className="cs-unlock-reward">
                 <ArtTile art={next.reward.art} kind={next.reward.kind} size={28} gold={next.reward.gold} />
                 <span>
-                  <b>{next.reward.name}</b> {next.reward.kind}
-                  {next.reward.credit && <span className="fan-credit small"> · art by {next.reward.credit}</span>}
+                  <b>{next.reward.name}</b>
+                  {next.reward.credit && <span className="fan-credit small"> by {next.reward.credit}</span>}
                 </span>
               </span>
             )}

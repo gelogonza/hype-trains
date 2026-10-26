@@ -1,15 +1,13 @@
 import ArtTile from '../ArtTile.jsx';
-import { STREAMER } from '../../data/climb.js';
 import { mySubmissions, openRequests, pickedLevelOf, submissionsFor } from '../../state/reducer.js';
 
 function statusText(state, s) {
-  if (s.status === 'vault') return 'Saved to the vault for a future climb';
+  if (s.status === 'vault') return 'In the vault';
   if (s.status === 'picked') {
-    const picked = pickedLevelOf(state, s.id);
-    if (picked?.live) return `Live in Goal ${picked.level}! You're credited when it unlocks.`;
-    if (picked) return `Picked for Goal ${picked.level} · goes live when ${STREAMER.name} publishes`;
+    const level = pickedLevelOf(state, s.id);
+    if (level) return `Picked for Goal ${level}`;
   }
-  return 'Submitted · waiting for mod review';
+  return 'Waiting for review';
 }
 
 export default function FanHome({ state, dispatch }) {
@@ -18,10 +16,7 @@ export default function FanHome({ state, dispatch }) {
 
   return (
     <div className="screen-body">
-      <p className="screen-intro">
-        Your art could become an emote or badge that supporters earn in {STREAMER.name}'s Community Climb. You're credited
-        every time it unlocks, and you get the Creator badge.
-      </p>
+      <p className="screen-intro">Get picked and you keep a sparkle version only you can use.</p>
 
       <h3 className="editor-heading">Open requests</h3>
       {requests.length ? (
@@ -41,7 +36,7 @@ export default function FanHome({ state, dispatch }) {
           ))}
         </ul>
       ) : (
-        <p className="muted small empty">No open requests right now.</p>
+        <p className="muted small empty">None right now.</p>
       )}
 
       <h3 className="editor-heading">Your submissions</h3>
@@ -49,17 +44,18 @@ export default function FanHome({ state, dispatch }) {
         <ul className="sub-list">
           {mine.map((s) => (
             <li key={s.id} className={`sub-item${s.status === 'picked' ? ' sub-item--picked' : ''}`}>
-              <ArtTile art={s.art} kind={s.kind} size={44} />
+              {/* Picked art shows the fan's creator version, with the sparkle. */}
+              <ArtTile art={s.art} kind={s.kind} size={44} sparkle={s.status === 'picked'} />
               <div className="sub-info">
                 <div className="sub-name">{s.name}</div>
                 <div className="small">{statusText(state, s)}</div>
-                {s.status === 'picked' && <div className="muted small">You'll get the Creator badge and keep your {s.kind}.</div>}
+                {s.status === 'picked' && <div className="fan-credit small">✨ Creator version · only you</div>}
               </div>
             </li>
           ))}
         </ul>
       ) : (
-        <p className="muted small empty">You haven't submitted anything yet.</p>
+        <p className="muted small empty">Nothing yet.</p>
       )}
     </div>
   );

@@ -6,10 +6,13 @@ import Icon from '../Icon.jsx';
 // Chat rows styled like Twitch: badges, colored bold name, message. Sub, gift and cheer events
 // are Twitch's highlighted notices. Emote codes (like PepperFace) render as the emote.
 
-function Message({ text, emotes }) {
+// When the fan who made an emote posts it, it shows their creator version (with the sparkle).
+function Message({ text, emotes, author }) {
   return text.split(/(\s+)/).map((w, i) => {
     const e = emotes.get(w);
-    return e ? <ArtTile key={i} art={e.art} kind="emote" size={24} title={w} /> : w;
+    if (!e) return w;
+    const mine = !!author && e.credit === `@${author}`;
+    return <ArtTile key={i} art={e.art} kind="emote" size={24} sparkle={mine} title={mine ? `${w} (creator version)` : w} />;
   });
 }
 
@@ -69,7 +72,7 @@ function ChatLine({ line, emotes }) {
   return (
     <li className="chat-line">
       {line.lead && <LeadClimber />}
-      <span className="chat-author" style={{ color: line.color }}>{line.author}</span>: <Message text={line.text} emotes={emotes} />
+      <span className="chat-author" style={{ color: line.color }}>{line.author}</span>: <Message text={line.text} emotes={emotes} author={line.author} />
     </li>
   );
 }

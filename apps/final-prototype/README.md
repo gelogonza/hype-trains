@@ -22,6 +22,10 @@ An interactive research prototype for the **Community Climb** concept (IDP I-441
 
 **The streamer stays in control.** Reaching a goal only *unlocks* its challenge. The streamer starts each challenge from Stream Manager when it suits the stream. While a challenge is live the clock pauses, the climb card turns red, and the stream shows a "Live challenge" lower-third.
 
+**Creator sparkle.** A fan whose art becomes a reward gets a creator version of it, reserved for them: small white and gold sparkles drift off the art. When an artist posts their own emote in chat, it shows the sparkle; everyone else's copy doesn't. When their goal unlocks, the artist posts it straight away.
+
+**Minimal text.** Every screen uses as few words as possible: short labels and status lines, no explanatory paragraphs.
+
 **The UI follows the Twitch mobile app** (dark theme and Inter). Every color comes from Twitch's UI Starter Kit tokens: violet for the climb and actions, greys for surfaces, yellow for unlocks and the summit, red for live, green for done. Each part sits where Twitch already puts that kind of thing: the climb is pinned at the top of chat, the donor leaderboard is Twitch's pinned chat leaderboard, rewards live in the emote picker, support uses Twitch-style Subscribe / Gift Subs / Bits sheets, and the streamer runs everything from Stream Manager.
 
 The climbing animation is a simple 2D take on **Angelo Gonzalez's** animated Hype Train (`apps/hype-pass` in the team repo).
@@ -42,8 +46,8 @@ On a desktop the app renders inside a 390 × 844 phone frame. On a phone it fill
 
 ## What this prototype tests
 
-1. **Streamer:** can someone set up goals, request art, pick a submission, and publish in about 3 minutes without help? Does running the climb live (start, challenges, end) feel like they're in control?
-2. **Fan:** does a fan understand how to contribute and what they get (credit, Creator badge)?
+1. **Streamer:** can someone set up goals, request art and pick a submission in about 3 minutes without help, all from one screen? Does running the climb live (start, challenges, end) feel like they're in control?
+2. **Fan:** does a fan understand how to contribute and what they get (credit, and a sparkle version of their art only they can use)?
 3. **Viewer:** does the preview build anticipation? Is it clear what everyone gets (the challenge) vs what you get (the reward)? Does the mystery goal add excitement? Do viewers notice and value community-made rewards and the creator credit?
 
 ## Roles
@@ -53,17 +57,17 @@ Use **Prototype: view as** at the top to switch between three roles. They share 
 | Role | You play | What you can do |
 |---|---|---|
 | **Viewer** | "you" | Preview the climb, support it, earn rewards, see who made them. |
-| **Streamer** | PixelPaloma | **Stream Manager:** start the climb, start and finish challenges, end it early, schedule the next one. **Climb setup:** segment length, mystery goal, each goal's challenge and reward, art requests, publish. |
+| **Streamer** | PixelPaloma | One **Stream Manager** screen: set the length and mystery goal on the climb card, edit goals in place, request and pick fan art, start the climb, start and finish challenges, end it early, schedule the next one. |
 | **Fan** | @sketchy_sam | See open art requests, submit placeholder art, track your submissions. |
 
 **Try the full loop:**
 1. As **Viewer**, tap the pinned **Community Climb** card to preview the goals. The last one is a mystery.
 2. As **Streamer**, in **Stream Manager**, tap **Start Community Climb**. (Or use **dev → Start the climb**.)
 3. As **Viewer**, watch the start moment on stream, then support. The climber moves up, flags plant at each goal, and Goal 3 reveals the mystery goal.
-4. As **Streamer**, tap an unlocked challenge to start it. As **Viewer**, the stream shows it and the clock is paused. Tap it again as Streamer to finish.
-5. Let the clock run out, or **End climb** as Streamer. The recap shows what carries over. As Streamer, **Schedule the next climb**: unreached goals are marked "Back from last climb".
+4. As **Streamer**, tap **Start** on an unlocked goal. As **Viewer**, the stream shows it and the clock is paused. Tap **Done** as Streamer to finish.
+5. Let the clock run out, or **End climb** as Streamer. The recap shows what carries over. As Streamer, **Schedule next climb**: unreached goals are marked "Back" in the viewer's goal list.
 
-**Fan art loop:** as **Fan**, submit art to the Goal 2 request. As **Streamer**, open Goal 2 → Review submissions → pick yours → Publish climb. As **Viewer**, unlock Goal 2: the card, chat and emote picker credit "art by @sketchy_sam".
+**Fan art loop:** as **Fan**, submit art to the Goal 2 request. As **Streamer**, tap **Review** on Goal 2 and pick yours. As **Viewer**, unlock Goal 2: the card, chat and emote picker credit "art by @sketchy_sam", and the Fan screen shows your sparkle version.
 
 ## What each part is for
 
@@ -73,31 +77,28 @@ Use **Prototype: view as** at the top to switch between three roles. They share 
 |---|---|
 | Player | Placeholder video with Twitch's player controls and LIVE tag. Shows the climb's big moments as an on-stream overlay (start, goal unlocked, mystery revealed, summit) and a "Live challenge" lower-third. |
 | Channel row | Avatar with live ring, name, title, category, red viewer count, Follow (works locally) and Subscribe (opens the support sheet). |
-| Community Climb card | Pinned at the top of chat. A header with the goal count and the clock, over a small mountain scene. It covers each moment: scheduled ("Starts soon"), the next goal, **Almost!** (glows at 85% of a goal), a goal unlocked (gold, with what you got), the mystery reveal, a live challenge (red, clock paused), the summit and the end. Tap it for the full climb (or the recap after). |
+| Community Climb card | Pinned at the top of chat: the goal count and clock over a small mountain scene, with one short status line ("4 goals · 5:00", "Goal 2: …", "Almost! 400 to go", "Goal 1 unlocked! You got HypeHeart", "Revealed: …", "Live: …", "Summit!"). It glows near a goal, turns yellow on unlocks, and red while a challenge is live. Tap it for the full climb (or the recap after). |
 | Mountain scene | The climber moves along the trail as hype comes in. Flags: grey = locked, violet = next, yellow and waving = reached, "?" = mystery. The sky goes from violet to an orange dusk to near-black night as the clock runs down, and turns gold at the summit. Respects reduced-motion settings. |
 | Chat leaderboard | This climb's top 3, pinned under the card. The Lead Climber (top contributor) gets the mountain badge. Tap for the full list. |
 | Chat | Twitch-style rows: badges, colored names, sub/gift/cheer notices, the broadcaster badge, the Lead Climber badge (stamped when the message is sent), and emote codes rendered as emotes. You can type and send messages. |
 | Message bar | **Send a message**, the emote button (red dot once you've earned something), **Bits** and **Gift** buttons. |
-| Support sheet | Tabs for Subscribe, Gift Subs and Bits, with the time left and what you'd earn. A confirm step labelled "Prototype: no real payment" adds hype. Before the climb starts, it says support won't count yet. |
+| Support sheet | Tabs for Subscribe, Gift Subs and Bits, with the clock and what you'd earn. A confirm step labelled "Prototype: no real payment" adds hype. |
 | Emote picker | Every goal's emote and badge, locked or earned, with "by @fan". The mystery goal's reward stays a "?". Tap an earned emote to add it to your message. |
-| Climb panel | A big mountain with labelled goals, the status (or "Starts when PixelPaloma kicks it off" with **Notify me**), what the next goal unlocks for everyone and supporters, Gift a Sub / Cheer, every goal, and the Top climbers. |
-| Recap | A sheet when the climb ends: why it ended, the goals reached and whether each challenge has been done on stream, your rewards, thanks to the Lead Climber and artists, what you did, and what comes back next climb (the mystery stays secret). **Back to the stream** closes it; the card reopens it. |
+| Climb panel | A big mountain with labelled goals, the status (or "Starts soon" with **Notify**), the next goal (what everyone and you get), Gift a Sub / Cheer, every goal, and the Top climbers. |
+| Recap | A sheet when the climb ends: the mountain, how far it got, the Lead Climber, the unlocked challenges (✅ done, ⏳ owed, 🔴 live), what you got, and what comes back next climb with **Remind me**. |
 
 **Streamer**
 
 | Part | Purpose |
 |---|---|
-| Stream Manager | Stream preview, the climb card, then by phase: **Start Community Climb** (scheduled), the time left and a two-tap **End climb** (live), or **Schedule the next climb** (ended). A Hype Train status row, the challenges as quick-action tiles (tap to start, tap again when done; one at a time, and the clock pauses meanwhile), Top climbers for shout-outs, and an activity feed of support. |
-| Climb setup | **Segment length** (3, 5 or 10 minutes, shortened for testing), **Mystery final goal** on/off, and the 4 goals: each goal's challenge, reward and any open request. "Edited" marks unpublished changes. **Publish climb** schedules a new climb; it's disabled while a climb is live. |
-| Goal editor | Challenge text (80 characters max) with community questions as prompts instead of templates. Reward controls: request art, review submissions, pick from the vault, or use the default reward. |
-| Request art | Choose emote or badge and write a short brief for fans. |
-| Pick a reward | Submissions shortlisted by mods, other submissions, and the vault (unused art from earlier requests). Picking closes the request and sends the rest to the vault. |
+| Stream Manager | The streamer's only screen. Stream preview; the **climb card** with its settings attached underneath (**3 / 5 / 10 min** and **Mystery**, editable until the climb starts); then **Start Community Climb**, a two-tap **End climb**, or **Schedule next climb**. Then the **Goals**, top to bottom: each shows its challenge (with **Start** / **Done** while the climb runs), its reward with the fan art action (**Request art**, **Requested** or **Review (n)**), and **✎ Edit**, which opens the challenge text, ideas and reward options in place. Edits apply straight away; goals and settings lock while a climb is live. Then Top climbers and an activity feed. |
+| Art sheets | **Request art** (emote or badge, and a short brief for fans) and **Pick a reward** (shortlisted by mods, other submissions, and the vault). They open over Stream Manager, so you never leave it. |
 
 **Fan**
 
 | Part | Purpose |
 |---|---|
-| Fan home | Open requests from the streamer, and your submissions with their status (waiting for review, picked, live, or in the vault). |
+| Fan home | Open requests, and your submissions with their status (waiting for review, picked, live, or in the vault). Picked art shows your **creator version**, with the sparkle. |
 | Submit art | Pick a placeholder picture and background, name it, submit. Nothing is uploaded. |
 
 **`dev` button** (in the role bar): prototype controls.
@@ -133,13 +134,13 @@ State is a single `useReducer`: [`src/state/reducer.js`](src/state/reducer.js) f
 
 ## Known limits
 
-- **There is no Hype Train in the prototype.** "Off while the climb runs" is only a status line in Stream Manager.
+- **There is no Hype Train in the prototype.** "Only one runs at a time" is a rule of the concept; nothing in the UI shows it, since streamers don't usually manage Hype Trains.
 - **The crowd is random.** Two runs on *Auto* can end at different goals. Use *Summit* or *Run out* for a repeatable demo.
 - **Scheduling is a state, not a time.** "Scheduled" means announced for this stream; there's no calendar or real notification (Notify me and Remind me do nothing yet).
 - **Not every Twitch control works.** Settings, More and Minimize on the player are for looks.
 - **No Mod role.** Mod shortlisting is shown with fixtures only.
 - **No real uploads.** Art is placeholder emoji, so it can't test what real fan art looks like.
-- **Creator rewards aren't shown from the fan's side.** The fan screen says they'll get the Creator badge, but there is no fan view of earning it.
+- **The creator sparkle is only shown, not earned.** It appears in chat when an artist posts their own emote, and on a fan's picked art; there is no real per-user emote variant behind it.
 - **Voting and mini-games are parked.** The stage 1 version with voting is in Thejas's own prototype repo (tag `stage-1`), not in this one.
 
 ## Open design questions

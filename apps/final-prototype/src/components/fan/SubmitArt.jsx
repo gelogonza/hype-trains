@@ -25,7 +25,7 @@ export default function SubmitArt({ request, dispatch }) {
         <div className="art-preview">
           <ArtTile art={{ emoji, bg }} kind={request.kind} size={84} />
           <div className="art-preview-name">{name || 'YourName'}</div>
-          <div className="proto-label">Prototype: placeholder art, nothing is uploaded</div>
+          <div className="proto-label">Prototype: placeholder art</div>
         </div>
 
         <h3 className="editor-heading">Picture</h3>
@@ -61,7 +61,7 @@ export default function SubmitArt({ request, dispatch }) {
           aria-label={`${request.kind} name`}
           onChange={(e) => setName(e.target.value)}
         />
-        <div className={`char-count${name && !valid ? ' warn' : ''}`}>3–20 letters or numbers, no spaces</div>
+        <div className={`char-count${name && !valid ? ' warn' : ''}`}>3–20 letters or numbers</div>
 
         <button
           className="btn-primary btn-block"
