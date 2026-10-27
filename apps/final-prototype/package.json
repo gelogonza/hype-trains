@@ -1,0 +1,24 @@
+{
+  "name": "@hype/final-prototype",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^6.1.2",
+    "vite": "^8.3.4"
+  },
+  "description": "Community Climb, final prototype (Thejas Mirle)",
+  "hype": {
+    "port": 5105,
+    "out": "dist"
+  }
+}
